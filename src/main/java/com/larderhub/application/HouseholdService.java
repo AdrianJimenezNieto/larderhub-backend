@@ -6,6 +6,8 @@ import com.larderhub.domain.model.User;
 import com.larderhub.domain.ports.in.household.HouseholdUseCase;
 import com.larderhub.domain.ports.out.household.HouseholdPersistencePort;
 import com.larderhub.domain.ports.out.householdMembers.HouseholdMembersPersistencePort;
+import com.larderhub.domain.ports.out.pantry.PantryItemPersistencePort;
+import com.larderhub.domain.ports.out.shopping.ShoppingItemPersistencePort;
 import com.larderhub.domain.ports.out.user.UserPersistencePort;
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.CreateHouseholdRequest;
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.HouseholdResponse;
@@ -32,14 +34,13 @@ public class HouseholdService implements HouseholdUseCase {
   private final HouseholdPersistencePort householdPersistencePort;
   private final HouseholdMembersPersistencePort householdMembersPersistencePort;
   private final UserPersistencePort userPersistencePort;
-
-  // --- Use Cases ---
+  private final PantryItemPersistencePort pantryItemPersistencePort;
+  private final ShoppingItemPersistencePort shoppingItemPersistencePort;
 
   @Override
   public HouseholdResponse createHousehold(CreateHouseholdRequest request, String username) {
     User user = resolveUser(username);
 
-    // Generate a unique 8-character alphanumeric invite code
     String joinCode = generateUniqueJoinCode();
 
     Household household = Household.builder()
@@ -49,7 +50,7 @@ public class HouseholdService implements HouseholdUseCase {
 
     Household saved = householdPersistencePort.save(household);
 
-    // Creator automatically becomes ADMIN of the household
+    // el que crea el hogar es automáticamente ADMIN
     HouseholdMember membership = HouseholdMember.builder()
         .userId(user.getId())
         .householdId(saved.getId())
@@ -67,7 +68,7 @@ public class HouseholdService implements HouseholdUseCase {
     Household household = householdPersistencePort.findByJoinCode(request.getJoinCode())
         .orElseThrow(() -> new IllegalArgumentException("Invalid join code"));
 
-    // Prevent a user from joining the same household twice
+    // evitar que alguien entre dos veces al mismo hogar
     if (householdMembersPersistencePort.existsByUserIdAndHouseholdId(user.getId(), household.getId())) {
       throw new IllegalArgumentException("You are already a member of this household");
     }
@@ -99,7 +100,6 @@ public class HouseholdService implements HouseholdUseCase {
   public List<MemberResponse> getMembers(Long householdId, String username) {
     User user = resolveUser(username);
 
-    // Only members of the household can list its members
     if (!householdMembersPersistencePort.existsByUserIdAndHouseholdId(user.getId(), householdId)) {
       throw new AccessDeniedException("You are not a member of this household");
     }
@@ -118,15 +118,11 @@ public class HouseholdService implements HouseholdUseCase {
         .collect(Collectors.toList());
   }
 
-  // --- Slice 5: Admin member management ---
-
   @Override
   public List<UserSearchResultDTO> searchUser(Long householdId, String query, String adminUsername) {
-    // Only an ADMIN of the household can search users
     requireAdmin(adminUsername, householdId);
 
-    // Partial, case-insensitive search: username CONTAINS query OR email CONTAINS
-    // query
+    // búsqueda parcial por username o email
     return userPersistencePort.searchByQuery(query).stream()
         .map(user -> UserSearchResultDTO.builder()
             .id(user.getId())
@@ -142,13 +138,11 @@ public class HouseholdService implements HouseholdUseCase {
   public MemberResponse inviteMember(Long householdId, InviteMemberRequest request, String adminUsername) {
     requireAdmin(adminUsername, householdId);
 
-    // Resolve target user by username or email
     User target = userPersistencePort.findByUsername(request.getQuery())
         .or(() -> userPersistencePort.findByEmail(request.getQuery()))
         .orElseThrow(() -> new IllegalArgumentException(
             "No user found with username or email: " + request.getQuery()));
 
-    // Prevent adding someone already in the household
     if (householdMembersPersistencePort.existsByUserIdAndHouseholdId(target.getId(), householdId)) {
       throw new IllegalArgumentException(target.getUsername() + " is already a member of this household");
     }
@@ -172,12 +166,10 @@ public class HouseholdService implements HouseholdUseCase {
   public void removeMember(Long householdId, Long targetUserId, String adminUsername) {
     User admin = requireAdmin(adminUsername, householdId);
 
-    // An ADMIN cannot remove themselves
     if (admin.getId().equals(targetUserId)) {
       throw new IllegalArgumentException("You cannot remove yourself from the household");
     }
 
-    // The target must actually be a member
     if (!householdMembersPersistencePort.existsByUserIdAndHouseholdId(targetUserId, householdId)) {
       throw new IllegalArgumentException("User " + targetUserId + " is not a member of this household");
     }
@@ -185,7 +177,45 @@ public class HouseholdService implements HouseholdUseCase {
     householdMembersPersistencePort.deleteByUserIdAndHouseholdId(targetUserId, householdId);
   }
 
-  // --- Helpers ---
+  @Override
+  public MemberResponse changeRole(Long householdId, Long targetUserId, String newRole, String adminUsername) {
+    requireAdmin(adminUsername, householdId);
+
+    HouseholdMember membership = householdMembersPersistencePort
+        .findByUserIdAndHouseholdId(targetUserId, householdId)
+        .orElseThrow(() -> new IllegalArgumentException("User " + targetUserId + " is not a member of this household"));
+
+    // no puede quedarse el hogar sin ningún admin
+    if (ROLE_MEMBER.equals(newRole) && ROLE_ADMIN.equals(membership.getRole())) {
+      long adminCount = householdMembersPersistencePort.countByHouseholdIdAndRole(householdId, ROLE_ADMIN);
+      if (adminCount <= 1) {
+        throw new IllegalArgumentException("El household necesita al menos un ADMIN");
+      }
+    }
+
+    householdMembersPersistencePort.updateRole(targetUserId, householdId, newRole);
+
+    User targetUser = userPersistencePort.findById(targetUserId)
+        .orElseThrow(() -> new IllegalStateException("User not found: " + targetUserId));
+
+    return MemberResponse.builder()
+        .userId(targetUserId)
+        .username(targetUser.getUsername())
+        .role(newRole)
+        .joinedAt(membership.getJoinedAt())
+        .build();
+  }
+
+  @Override
+  public void dissolveHousehold(Long householdId, String adminUsername) {
+    requireAdmin(adminUsername, householdId);
+
+    // borramos en orden: items → miembros → hogar
+    shoppingItemPersistencePort.deleteAllByHouseholdId(householdId);
+    pantryItemPersistencePort.deleteAllByHouseholdId(householdId);
+    householdMembersPersistencePort.deleteAllByHouseholdId(householdId);
+    householdPersistencePort.deleteById(householdId);
+  }
 
   private User resolveUser(String username) {
     return userPersistencePort.findByUsername(username)
@@ -206,7 +236,6 @@ public class HouseholdService implements HouseholdUseCase {
   private String generateUniqueJoinCode() {
     String code;
     do {
-      // Use first 8 chars of a UUID (uppercase, no hyphens) as invite code
       code = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
     } while (householdPersistencePort.existsByJoinCode(code));
     return code;

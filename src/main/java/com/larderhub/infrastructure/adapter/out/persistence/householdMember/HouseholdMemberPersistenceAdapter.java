@@ -71,8 +71,22 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
 
   @Override
   public void deleteByUserIdAndHouseholdId(Long userId, Long householdId) {
-    // Find the entity first so we can delete by its primary key
     householdMemberJpaRepository.findByUser_IdAndHousehold_Id(userId, householdId)
         .ifPresent(entity -> householdMemberJpaRepository.deleteById(entity.getId()));
+  }
+
+  @Override
+  public void updateRole(Long userId, Long householdId, String role) {
+    householdMemberJpaRepository.updateRole(userId, householdId, role);
+  }
+
+  @Override
+  public void deleteAllByHouseholdId(Long householdId) {
+    householdMemberJpaRepository.deleteAllByHousehold_Id(householdId);
+  }
+
+  @Override
+  public long countByHouseholdIdAndRole(Long householdId, String role) {
+    return householdMemberJpaRepository.countByHousehold_IdAndRole(householdId, role);
   }
 }

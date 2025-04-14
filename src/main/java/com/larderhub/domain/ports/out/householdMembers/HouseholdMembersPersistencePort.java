@@ -24,4 +24,13 @@ public interface HouseholdMembersPersistencePort {
 
   // Remove a user from a household
   void deleteByUserIdAndHouseholdId(Long userId, Long householdId);
+
+  // [Slice 5] Update a member's role within a household
+  void updateRole(Long userId, Long householdId, String role);
+
+  // [Slice 5] Remove all members from a household (used when dissolving)
+  void deleteAllByHouseholdId(Long householdId);
+
+  // [Slice 5] Count members with a specific role (used to guard last-admin check)
+  long countByHouseholdIdAndRole(Long householdId, String role);
 }

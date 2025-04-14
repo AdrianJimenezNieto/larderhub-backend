@@ -30,4 +30,10 @@ public interface HouseholdUseCase {
 
   // [ADMIN] Remove a member from the household
   void removeMember(Long householdId, Long targetUserId, String adminUsername);
+
+  // [ADMIN] Change the role of a household member (ADMIN ↔ MEMBER)
+  MemberResponse changeRole(Long householdId, Long targetUserId, String newRole, String adminUsername);
+
+  // [ADMIN] Dissolve the household, cascading deletes to all related data
+  void dissolveHousehold(Long householdId, String adminUsername);
 }

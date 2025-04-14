@@ -12,4 +12,7 @@ public interface HouseholdPersistencePort {
   Optional<Household> findByJoinCode(String joinCode);
 
   boolean existsByJoinCode(String joinCode);
+
+  // [Slice 5] Delete a household by id (used when dissolving)
+  void deleteById(Long id);
 }

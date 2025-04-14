@@ -41,4 +41,9 @@ public class HouseholdPersistenceAdapter implements HouseholdPersistencePort {
   public boolean existsByJoinCode(String joinCode) {
     return householdJpaRepository.existsByJoinCode(joinCode);
   }
+
+  @Override
+  public void deleteById(Long id) {
+    householdJpaRepository.deleteById(id);
+  }
 }
