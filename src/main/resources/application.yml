@@ -36,3 +36,10 @@ jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   expiration: 86400000  # 24 hours in milliseconds
 
+# VAPID keys for Web Push Notifications
+push:
+  vapid:
+    public-key: BB2GPciH1Ij19vGpvIY4Wlek3HpEVnXCKNjyxLlZuM8lHBRby90i5c1ZeDIwEsGfD4PuA_3TCkEi_6ODYirTLrA
+    private-key: iK6Yzogr08RvGzesFl_za0AJftGpKT3elIpZD_v88Uw
+    subject: mailto:adrianjimeneznieto@gmail.com
+
