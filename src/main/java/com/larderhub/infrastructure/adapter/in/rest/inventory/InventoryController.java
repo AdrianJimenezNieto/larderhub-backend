@@ -26,15 +26,13 @@ import java.util.List;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-// Nested under households: householdId is explicit in the URL
+// anidado bajo households, el householdId va en la URL
 @RequestMapping("/api/v1/households/{householdId}/inventory")
 @RequiredArgsConstructor
 public class InventoryController {
 
   private final InventoryUseCase inventoryUseCase;
 
-  // POST /api/v1/households/{householdId}/inventory — Add an item to the
-  // household pantry
   @PostMapping
   public ResponseEntity<PantryItemResponseDTO> addItem(
       @PathVariable Long householdId,
@@ -45,7 +43,6 @@ public class InventoryController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  // GET /api/v1/households/{householdId}/inventory — List all items in the pantry
   @GetMapping
   public ResponseEntity<List<PantryItemResponseDTO>> listItems(
       @PathVariable Long householdId,
@@ -54,7 +51,6 @@ public class InventoryController {
     return ResponseEntity.ok(inventoryUseCase.listItems(householdId, userDetails.getUsername()));
   }
 
-  // PUT /api/v1/households/{householdId}/inventory/{itemId} — Update an item
   @PutMapping("/{itemId}")
   public ResponseEntity<PantryItemResponseDTO> updateItem(
       @PathVariable Long householdId,
@@ -66,7 +62,6 @@ public class InventoryController {
     return ResponseEntity.ok(response);
   }
 
-  // DELETE /api/v1/households/{householdId}/inventory/{itemId} — Remove an item
   @DeleteMapping("/{itemId}")
   public ResponseEntity<Void> deleteItem(
       @PathVariable Long householdId,
@@ -77,9 +72,6 @@ public class InventoryController {
     return ResponseEntity.noContent().build();
   }
 
-  // --- Slice 6: Expiration Alerts ---
-
-  // GET /api/v1/households/{householdId}/inventory/expired — List expired items
   @GetMapping("/expired")
   public ResponseEntity<List<PantryItemResponseDTO>> getExpiredItems(
       @PathVariable Long householdId,
@@ -88,8 +80,6 @@ public class InventoryController {
     return ResponseEntity.ok(inventoryUseCase.getExpiredItems(householdId, userDetails.getUsername()));
   }
 
-  // GET /api/v1/households/{householdId}/inventory/expiring?daysAhead=7 — List
-  // expiring items
   @GetMapping("/expiring")
   public ResponseEntity<List<PantryItemResponseDTO>> getExpiringItems(
       @PathVariable Long householdId,

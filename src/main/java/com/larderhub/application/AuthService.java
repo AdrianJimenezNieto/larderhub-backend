@@ -24,7 +24,6 @@ public class AuthService implements AuthUseCase {
 
   @Override
   public AuthResponse register(RegisterRequest request) {
-    // Validate that the user does not already exist
     if (userPersistencePort.existsByEmail(request.getEmail())) {
       throw new IllegalArgumentException("Email already registered");
     }
@@ -32,7 +31,6 @@ public class AuthService implements AuthUseCase {
       throw new IllegalArgumentException("Username already taken");
     }
 
-    // Build and persist the new user with hashed password
     User newUser = User.builder()
         .username(request.getUsername())
         .email(request.getEmail())
@@ -42,18 +40,22 @@ public class AuthService implements AuthUseCase {
 
     User savedUser = userPersistencePort.save(newUser);
 
-    // Generate JWT and return response
+    // devolvemos token + datos para que el frontend no haga otro request
     String token = jwtService.generateToken(savedUser.getUsername());
     return AuthResponse.builder()
         .token(token)
         .username(savedUser.getUsername())
         .email(savedUser.getEmail())
+        .user(AuthResponse.UserPayload.builder()
+            .id(savedUser.getId())
+            .name(savedUser.getUsername())
+            .email(savedUser.getEmail())
+            .build())
         .build();
   }
 
   @Override
   public AuthResponse login(LoginRequest request) {
-    // Find user by email and validate credentials
     User user = userPersistencePort.findByEmail(request.getEmail())
         .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
@@ -61,12 +63,16 @@ public class AuthService implements AuthUseCase {
       throw new BadCredentialsException("Invalid credentials");
     }
 
-    // Generate JWT and return response
     String token = jwtService.generateToken(user.getUsername());
     return AuthResponse.builder()
         .token(token)
         .username(user.getUsername())
         .email(user.getEmail())
+        .user(AuthResponse.UserPayload.builder()
+            .id(user.getId())
+            .name(user.getUsername())
+            .email(user.getEmail())
+            .build())
         .build();
   }
 }

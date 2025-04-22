@@ -61,4 +61,9 @@ public class ShoppingItemPersistenceAdapter implements ShoppingItemPersistencePo
   public void deleteById(Long id) {
     shoppingItemJpaRepository.deleteById(id);
   }
+
+  @Override
+  public void deleteAllByHouseholdId(Long householdId) {
+    shoppingItemJpaRepository.deleteAllByHousehold_Id(householdId);
+  }
 }

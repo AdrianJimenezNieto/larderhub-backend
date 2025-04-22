@@ -6,5 +6,5 @@ import java.util.List;
 
 @Repository
 public interface RecipeJpaRepository extends JpaRepository<RecipeEntity, Long> {
-  List<RecipeEntity> findByAuthor_Id(Long authorId);
+  List<RecipeEntity> findByAuthorId(Long authorId);
 }

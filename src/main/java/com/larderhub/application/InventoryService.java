@@ -13,6 +13,7 @@ import com.larderhub.infrastructure.adapter.in.rest.inventory.dto.PantryItemResp
 import com.larderhub.infrastructure.adapter.in.rest.inventory.dto.PantryItemUpdateDTO;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -23,14 +24,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryService implements InventoryUseCase {
 
   private final PantryItemPersistencePort pantryItemPersistencePort;
   private final ProductPersistencePort productPersistencePort;
   private final UserPersistencePort userPersistencePort;
   private final HouseholdMembersPersistencePort householdMembersPersistencePort;
+  private final PushSenderService pushSenderService;
 
-  // Validate that the authenticated user belongs to the requested household
+  // comprueba que el usuario sea miembro del household antes de tocar nada
   private User resolveAndValidateMembership(String username, Long householdId) {
     User user = userPersistencePort.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
@@ -44,22 +47,17 @@ public class InventoryService implements InventoryUseCase {
 
   @Override
   public PantryItemResponseDTO addItem(Long householdId, PantryItemCreateDTO dto, String username) {
-    // Membership check — user must belong to the target household
-    resolveAndValidateMembership(username, householdId);
+    User actor = resolveAndValidateMembership(username, householdId);
 
-    // Validate that the product exists in the catalog
     Product product = productPersistencePort.findById(dto.getProductId())
         .orElseThrow(() -> new IllegalArgumentException("Product not found: " + dto.getProductId()));
 
-    // Idempotency check: if the product already exists in the pantry, sum the
-    // quantity
-    return pantryItemPersistencePort.findByHouseholdIdAndProductId(householdId, product.getId())
+    // si ya existe el producto en la despensa, sumamos cantidad
+    PantryItemResponseDTO result = pantryItemPersistencePort.findByHouseholdIdAndProductId(householdId, product.getId())
         .map(existingItem -> {
-          // Sum the new quantity to the existing one
           existingItem.setQuantity(existingItem.getQuantity().add(dto.getQuantity()));
 
-          // If both have expiration dates, keep the nearest one (safest for food)
-          // If only one has it, keep that one
+          // guardamos la más cercana: más conservadora para seguridad alimentaria
           LocalDate existingDate = existingItem.getExpirationDate();
           LocalDate incomingDate = dto.getExpirationDate();
           if (existingDate != null && incomingDate != null) {
@@ -72,7 +70,6 @@ public class InventoryService implements InventoryUseCase {
           return toResponseDTO(updated, product);
         })
         .orElseGet(() -> {
-          // If it doesn't exist, create a new one
           PantryItem newItem = PantryItem.builder()
               .householdId(householdId)
               .productId(product.getId())
@@ -83,11 +80,24 @@ public class InventoryService implements InventoryUseCase {
           PantryItem saved = pantryItemPersistencePort.save(newItem);
           return toResponseDTO(saved, product);
         });
+
+    // push a los demás miembros, si falla no corta el flujo
+    try {
+      pushSenderService.sendToHouseholdMembers(
+          householdId,
+          actor.getId(),
+          "LarderHub",
+          actor.getUsername() + " ha añadido " + product.getName() + " a la despensa"
+      );
+    } catch (Exception e) {
+      log.warn("Push notification failed for household {}: {}", householdId, e.getMessage());
+    }
+
+    return result;
   }
 
   @Override
   public List<PantryItemResponseDTO> listItems(Long householdId, String username) {
-    // Membership check — user must belong to the target household
     resolveAndValidateMembership(username, householdId);
 
     return pantryItemPersistencePort.findByHouseholdId(householdId).stream()
@@ -101,11 +111,9 @@ public class InventoryService implements InventoryUseCase {
 
   @Override
   public PantryItemResponseDTO updateItem(Long householdId, Long itemId, PantryItemUpdateDTO dto, String username) {
-    // Membership check
     resolveAndValidateMembership(username, householdId);
 
-    // Ensure the item belongs to this specific household (prevents cross-household
-    // tampering)
+    // que el item sea de este household y no de otro
     if (!pantryItemPersistencePort.existsByIdAndHouseholdId(itemId, householdId)) {
       throw new AccessDeniedException("Item " + itemId + " does not belong to household " + householdId);
     }
@@ -113,7 +121,6 @@ public class InventoryService implements InventoryUseCase {
     PantryItem existing = pantryItemPersistencePort.findById(itemId)
         .orElseThrow(() -> new IllegalArgumentException("Pantry item not found: " + itemId));
 
-    // Apply partial updates only for non-null fields
     if (dto.getQuantity() != null) {
       existing.setQuantity(dto.getQuantity());
     }
@@ -130,18 +137,14 @@ public class InventoryService implements InventoryUseCase {
 
   @Override
   public void deleteItem(Long householdId, Long itemId, String username) {
-    // Membership check
     resolveAndValidateMembership(username, householdId);
 
-    // Ensure the item belongs to this household before deleting
     if (!pantryItemPersistencePort.existsByIdAndHouseholdId(itemId, householdId)) {
       throw new AccessDeniedException("Item " + itemId + " does not belong to household " + householdId);
     }
 
     pantryItemPersistencePort.deleteById(itemId);
   }
-
-  // --- Slice 6: Expiration Alerts ---
 
   @Override
   public List<PantryItemResponseDTO> getExpiredItems(Long householdId, String username) {
@@ -173,7 +176,6 @@ public class InventoryService implements InventoryUseCase {
         .collect(Collectors.toList());
   }
 
-  // Map domain objects to response DTO
   private PantryItemResponseDTO toResponseDTO(PantryItem item, Product product) {
     return PantryItemResponseDTO.builder()
         .id(item.getId())

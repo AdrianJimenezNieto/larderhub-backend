@@ -1,5 +1,6 @@
 package com.larderhub.infrastructure.adapter.in.rest.config;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,7 +16,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  // Handle validation errors from @Valid (e.g. blank email, short password)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
     Map<String, String> errors = new HashMap<>();
@@ -27,13 +27,11 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(errors);
   }
 
-  // Handle business rule violations (duplicate email, username taken, etc.)
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
     return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
   }
 
-  // Handle wrong credentials on login
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
     return ResponseEntity
@@ -41,12 +39,20 @@ public class GlobalExceptionHandler {
         .body(Map.of("error", "Invalid email or password"));
   }
 
-  // Handle ownership violations (user trying to access another household's items)
+  // cuando el usuario intenta acceder a datos de otro household
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
     return ResponseEntity
         .status(HttpStatus.FORBIDDEN)
         .body(Map.of("error", ex.getMessage()));
+  }
+
+  // conflictos de unicidad, p.ej. valorar dos veces la misma receta
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+    return ResponseEntity
+        .status(HttpStatus.CONFLICT)
+        .body(Map.of("error", ex.getMessage() != null ? ex.getMessage() : "Duplicate entry"));
   }
 
   // Catch-all for unexpected errors

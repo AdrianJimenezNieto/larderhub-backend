@@ -14,6 +14,9 @@ public interface PantryItemPersistencePort {
 
   void deleteById(Long id);
 
+  // [Slice 5] Delete all pantry items for a household (used when dissolving)
+  void deleteAllByHouseholdId(Long householdId);
+
   boolean existsByIdAndHouseholdId(Long id, Long householdId);
 
   Optional<PantryItem> findByHouseholdIdAndProductId(Long householdId, Long productId);

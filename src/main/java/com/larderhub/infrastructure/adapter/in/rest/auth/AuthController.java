@@ -38,7 +38,7 @@ public class AuthController {
 
   @GetMapping("/me")
   public ResponseEntity<Map<String, String>> me(@AuthenticationPrincipal UserDetails userDetails) {
-    // Returns basic info from the JWT principal — no DB call needed
+    // sacamos el username del token, sin ir a la DB
     return ResponseEntity.ok(Map.of(
         "username", userDetails.getUsername(),
         "role", userDetails.getAuthorities().iterator().next().getAuthority()));

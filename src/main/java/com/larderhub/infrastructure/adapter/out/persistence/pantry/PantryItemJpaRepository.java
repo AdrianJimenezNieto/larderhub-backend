@@ -19,7 +19,9 @@ public interface PantryItemJpaRepository extends JpaRepository<PantryItemEntity,
   // For expired items alerts (expirationDate < current date)
   List<PantryItemEntity> findByHousehold_IdAndExpirationDateBefore(Long householdId, LocalDate date);
 
-  // For expiring items alerts (current date <= expirationDate <= target date)
   List<PantryItemEntity> findByHousehold_IdAndExpirationDateBetween(
       Long householdId, LocalDate startDate, LocalDate endDate);
+
+  // [Slice 5] Delete all pantry items for a household (used when dissolving)
+  void deleteAllByHousehold_Id(Long householdId);
 }

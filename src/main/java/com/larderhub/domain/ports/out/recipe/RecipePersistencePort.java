@@ -11,5 +11,7 @@ public interface RecipePersistencePort {
 
   List<Recipe> findByAuthorId(Long authorId);
 
+  List<Recipe> findAll();
+
   void deleteById(Long id);
 }

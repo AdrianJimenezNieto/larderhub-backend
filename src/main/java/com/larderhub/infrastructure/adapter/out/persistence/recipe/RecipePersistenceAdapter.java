@@ -30,7 +30,14 @@ public class RecipePersistenceAdapter implements RecipePersistencePort {
 
   @Override
   public List<Recipe> findByAuthorId(Long authorId) {
-    return recipeJpaRepository.findByAuthor_Id(authorId).stream()
+    return recipeJpaRepository.findByAuthorId(authorId).stream()
+        .map(recipePersistenceMapper::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<Recipe> findAll() {
+    return recipeJpaRepository.findAll().stream()
         .map(recipePersistenceMapper::toDomain)
         .collect(Collectors.toList());
   }

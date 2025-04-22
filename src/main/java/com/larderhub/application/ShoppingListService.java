@@ -33,7 +33,7 @@ public class ShoppingListService implements ShoppingListUseCase {
   private final UserPersistencePort userPersistencePort;
   private final HouseholdMembersPersistencePort householdMembersPersistencePort;
 
-  // Validate membership: throws 403 if the user doesn't belong to the household
+  // sólo miembros pueden ver/modificar la lista
   private User resolveAndValidateMembership(String username, Long householdId) {
     User user = userPersistencePort.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
@@ -49,7 +49,6 @@ public class ShoppingListService implements ShoppingListUseCase {
   public ShoppingItemResponseDTO addItem(Long householdId, ShoppingItemCreateDTO dto, String username) {
     resolveAndValidateMembership(username, householdId);
 
-    // Validate that the product exists in the catalog
     Product product = productPersistencePort.findById(dto.getProductId())
         .orElseThrow(() -> new IllegalArgumentException("Product not found: " + dto.getProductId()));
 
@@ -81,7 +80,6 @@ public class ShoppingListService implements ShoppingListUseCase {
   public ShoppingItemResponseDTO checkItem(Long householdId, Long itemId, String username) {
     resolveAndValidateMembership(username, householdId);
 
-    // Ensure the item belongs to this household
     if (!shoppingItemPersistencePort.existsByIdAndHouseholdId(itemId, householdId)) {
       throw new AccessDeniedException("Item " + itemId + " does not belong to household " + householdId);
     }
@@ -89,11 +87,10 @@ public class ShoppingListService implements ShoppingListUseCase {
     ShoppingItem item = shoppingItemPersistencePort.findById(itemId)
         .orElseThrow(() -> new IllegalArgumentException("Shopping item not found: " + itemId));
 
-    // Mark as bought in the shopping list
     item.setChecked(true);
     ShoppingItem updated = shoppingItemPersistencePort.save(item);
 
-    // Also add the item to the pantry idempotently (sum quantity if exists)
+    // al marcarlo comprado, lo añadimos automáticamente a la despensa
     pantryItemPersistencePort.findByHouseholdIdAndProductId(householdId, item.getProductId())
         .ifPresentOrElse(
             existingPantryItem -> {
@@ -132,11 +129,10 @@ public class ShoppingListService implements ShoppingListUseCase {
   public List<ShoppingItemResponseDTO> generateFromPantry(Long householdId, Double threshold, String username) {
     resolveAndValidateMembership(username, householdId);
 
-    // Default threshold: items with quantity <= 1 are considered "low stock"
+    // umbral por defecto: 1 unidad
     BigDecimal effectiveThreshold = BigDecimal.valueOf((threshold != null) ? threshold : 1.0);
 
     List<PantryItem> lowStockItems = pantryItemPersistencePort.findByHouseholdId(householdId).stream()
-        // compareTo returns negative if pantryItem.quantity < effectiveThreshold
         .filter(pi -> pi.getQuantity().compareTo(effectiveThreshold) <= 0)
         .collect(Collectors.toList());
 
@@ -146,7 +142,7 @@ public class ShoppingListService implements ShoppingListUseCase {
       Product product = productPersistencePort.findById(pantryItem.getProductId())
           .orElseThrow(() -> new IllegalStateException("Product not found"));
 
-      // Only add if not already in the shopping list (unchecked)
+      // no duplicar items ya pendientes en la lista
       boolean alreadyInList = shoppingItemPersistencePort.findByHouseholdId(householdId).stream()
           .anyMatch(s -> s.getProductId().equals(pantryItem.getProductId()) && !s.isChecked());
 
@@ -154,7 +150,6 @@ public class ShoppingListService implements ShoppingListUseCase {
         ShoppingItem item = ShoppingItem.builder()
             .householdId(householdId)
             .productId(product.getId())
-            // Suggest buying enough to go 1 unit above the threshold
             .quantity(effectiveThreshold.subtract(pantryItem.getQuantity()).add(BigDecimal.ONE).doubleValue())
             .checked(false)
             .build();
@@ -166,7 +161,6 @@ public class ShoppingListService implements ShoppingListUseCase {
     return generated;
   }
 
-  // Build response DTO from domain objects
   private ShoppingItemResponseDTO toResponseDTO(ShoppingItem item, Product product) {
     return ShoppingItemResponseDTO.builder()
         .id(item.getId())

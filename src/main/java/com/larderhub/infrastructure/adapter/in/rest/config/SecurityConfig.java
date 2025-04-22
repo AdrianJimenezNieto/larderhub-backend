@@ -38,20 +38,17 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            // Public endpoints: health check and auth routes
             .requestMatchers("/api/health", "/api/auth/**").permitAll()
-            // All other endpoints require authentication
             .anyRequest().authenticated())
-        // Use stateless sessions — no HTTP session will be created
+        // stateless: no usamos sesiones HTTP, todo va por JWT
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(ex -> ex
-            // Return 401 instead of Spring Security 6's default 403 for unauthenticated
-            // requests
+            // Spring Security 6 devuelve 403 para no autenticados, lo cambiamos a 401
             .authenticationEntryPoint((request, response, authException) -> response
                 .sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
         .authenticationProvider(authenticationProvider())
-        // Register JWT filter before Spring's username/password filter
+        // nuestro filtro JWT va antes que el de Spring
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
@@ -79,22 +76,14 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
 
-    // Allowed origins — add production URL here when deploying
     config.setAllowedOrigins(List.of(
-        "http://localhost:5173", // Vite dev server
-        "http://localhost:3000" // Alternative dev port
+        "http://localhost:5173",
+        "http://localhost:3000"
     ));
 
-    // Allowed HTTP methods
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-    // Headers the client is allowed to send (Authorization needed for JWT)
     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-
-    // Allow the browser to read the Authorization header in responses
     config.setExposedHeaders(List.of("Authorization"));
-
-    // Allow cookies / credentials to be sent cross-origin
     config.setAllowCredentials(true);
 
     // Cache preflight response for 1 hour

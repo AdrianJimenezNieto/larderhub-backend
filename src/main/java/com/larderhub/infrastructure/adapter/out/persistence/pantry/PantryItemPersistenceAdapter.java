@@ -67,4 +67,9 @@ public class PantryItemPersistenceAdapter implements PantryItemPersistencePort {
         .map(pantryItemPersistenceMapper::toDomain)
         .collect(Collectors.toList());
   }
+
+  @Override
+  public void deleteAllByHouseholdId(Long householdId) {
+    pantryItemJpaRepository.deleteAllByHousehold_Id(householdId);
+  }
 }

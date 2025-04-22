@@ -10,6 +10,8 @@ public interface ShoppingItemJpaRepository extends JpaRepository<ShoppingItemEnt
   // Find all shopping items for a given household
   List<ShoppingItemEntity> findByHousehold_Id(Long householdId);
 
-  // Check if a specific item belongs to the given household (ownership guard)
   boolean existsByIdAndHousehold_Id(Long id, Long householdId);
+
+  // [Slice 5] Delete all shopping items for a household (used when dissolving)
+  void deleteAllByHousehold_Id(Long householdId);
 }

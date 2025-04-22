@@ -17,4 +17,7 @@ public interface ShoppingItemPersistencePort {
   boolean existsByIdAndHouseholdId(Long id, Long householdId);
 
   void deleteById(Long id);
+
+  // [Slice 5] Delete all shopping items for a household (used when dissolving)
+  void deleteAllByHouseholdId(Long householdId);
 }

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -14,5 +13,6 @@ public class RecipeIngredient {
   private Long id;
   private Long recipeId;
   private Long productId;
-  private BigDecimal quantityRequired;
+  private Double quantity;
+  private String unit;
 }
