@@ -728,37 +728,37 @@
   ],
   "variable": [
     {
-      "id": "7223fc15-7afd-40f1-97cd-ac537001b9a8",
+      "id": "8baa0393-70ec-4690-8433-2947b7fde4ec",
       "key": "base_url",
       "value": "http://localhost:8080",
       "type": "string"
     },
     {
-      "id": "d7414c60-47f4-47af-a43a-77dafe325625",
+      "id": "85016a04-481d-4328-b7a3-2bf47d885aef",
       "key": "jwt_token",
       "value": "",
       "type": "string"
     },
     {
-      "id": "1e84f1ca-f2fc-45a1-8095-abe5755f9829",
+      "id": "0027fdf1-5533-4be0-aea3-7a2f5940c198",
       "key": "household_id",
       "value": "1",
       "type": "string"
     },
     {
-      "id": "c9607863-bedb-4675-84a5-3e3d2c742dd7",
+      "id": "44db9ae2-79b3-4b7f-b7d4-2848e23849aa",
       "key": "item_id",
       "value": "1",
       "type": "string"
     },
     {
-      "id": "46b8efc2-d34d-4386-a4ec-a984f0e79a91",
+      "id": "b8217c22-07fa-405c-9e13-656d351c459e",
       "key": "shopping_item_id",
       "value": "1",
       "type": "string"
     },
     {
-      "id": "dc353138-9938-4d49-8035-df044005e996",
+      "id": "5dd77f9a-9f0d-402a-96e1-a9909b517f54",
       "key": "product_id",
       "value": "1",
       "type": "string"
