@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: larderhub-backend
+  
+  # Database Configuration (Placeholder for local dev)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/larderhub
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update # Caution: Use validate in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true # Helpful for debugging
+
+server:
+  port: 8080
+  error:
+    include-message: always
