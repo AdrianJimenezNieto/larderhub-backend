@@ -1,0 +1,102 @@
+# ==============================================================================
+# STANDARD JAVA & BUILD TOOLS
+# ==============================================================================
+# Compiled class files
+*.class
+*.log
+*.ctxt
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle (Just in case migration happens)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+
+# ==============================================================================
+# IDE & EDITOR CONFIGURATIONS
+# ==============================================================================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ==============================================================================
+# OS GENERATED FILES
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==============================================================================
+# SENSITIVE INFORMATION & ENVIRONMENT
+# ==============================================================================
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Spring Boot specific secrets (Best practice: Inject via Envs, avoid committing these)
+application-secret.properties
+application-secret.yml
+**/config/secrets/
+
+# ==============================================================================
+# AI AGENTS & TOOLS (Requested Clean-up)
+# ==============================================================================
+# Gemini / Google Deepmind Agents
+.gemini/
+.agent/
+
+# GitHub Copilot
+.copilot-chat-history
+
+# Cursor / Windsurf / Others
+.cursor/
+.windsurf/
+.history/
+
+# ==============================================================================
+# OTHER
+# ==============================================================================
+# Local logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
