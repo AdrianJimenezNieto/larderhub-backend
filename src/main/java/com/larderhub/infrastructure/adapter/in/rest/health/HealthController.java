@@ -1,7 +1,7 @@
-package com.larderhub.infrastructure.adapter.in.rest;
+package com.larderhub.infrastructure.adapter.in.rest.health;
 
 import com.larderhub.domain.model.SystemHealth;
-import com.larderhub.domain.ports.in.GetSystemHealthUseCase;
+import com.larderhub.domain.ports.in.health.GetSystemHealthUseCase;
 
 import lombok.RequiredArgsConstructor;
 

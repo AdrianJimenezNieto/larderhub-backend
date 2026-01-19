@@ -1,4 +1,4 @@
-package com.larderhub.domain.ports.out;
+package com.larderhub.domain.ports.out.health;
 
 /**
  * OUTPUT PORT: DbHealthOutputPort

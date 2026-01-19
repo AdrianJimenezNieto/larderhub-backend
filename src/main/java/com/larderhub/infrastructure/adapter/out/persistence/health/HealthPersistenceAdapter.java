@@ -1,9 +1,10 @@
-package com.larderhub.infrastructure.adapter.out.persistence;
+package com.larderhub.infrastructure.adapter.out.persistence.health;
 
-import com.larderhub.domain.ports.out.DbHealthOutputPort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
+
+import com.larderhub.domain.ports.out.health.DbHealthOutputPort;
 
 /**
  * INFRASTRUCTURE ADAPTER (Output - Persistence): HealthPersistenceAdapter

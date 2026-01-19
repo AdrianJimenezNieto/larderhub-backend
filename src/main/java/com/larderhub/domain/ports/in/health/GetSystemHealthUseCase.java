@@ -1,4 +1,4 @@
-package com.larderhub.domain.ports.in;
+package com.larderhub.domain.ports.in.health;
 
 import com.larderhub.domain.model.SystemHealth;
 
