@@ -1,8 +1,9 @@
 package com.larderhub.application.service;
 
 import com.larderhub.domain.model.SystemHealth;
-import com.larderhub.domain.ports.in.GetSystemHealthUseCase;
-import com.larderhub.domain.ports.out.DbHealthOutputPort;
+import com.larderhub.domain.ports.in.health.GetSystemHealthUseCase;
+import com.larderhub.domain.ports.out.health.DbHealthOutputPort;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
