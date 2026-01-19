@@ -1,4 +1,4 @@
-package com.larderhub.infrastructure.adapter.out.persistence.user;
+package com.larderhub.infrastructure.adapter.out.persistence.household;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,34 +12,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "users")
+@Table(name= "households")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserEntity {
+public class HouseholdEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true, nullable = false, length = 50)
-  private String username;
+  @Column(nullable = false, length = 50)
+  private String name;
 
-  @Column(unique = true, nullable = false, length = 100)
-  private String email;
-
-  @Column(nullable = false, length = 255)
-  private String password;
-
-  @Column(name = "avatar_url", length = 255)
-  private String avatarUrl;
+  @Column(nullable = false, length = 10)
+  private String joinCode;
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
@@ -48,4 +42,5 @@ public class UserEntity {
   @UpdateTimestamp
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+  
 }
