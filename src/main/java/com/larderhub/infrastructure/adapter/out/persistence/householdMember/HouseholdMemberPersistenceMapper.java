@@ -8,7 +8,7 @@ import com.larderhub.infrastructure.adapter.out.persistence.household.HouseholdE
 import com.larderhub.infrastructure.adapter.out.persistence.user.UserEntity;
 
 @Mapper(componentModel = "spring")
-public interface HouseholdPersistenceMapper {
+public interface HouseholdMemberPersistenceMapper {
 
   // Domain to Entity
   @Mapping(source = "userId", target = "user")
@@ -16,18 +16,20 @@ public interface HouseholdPersistenceMapper {
   HouseholdMemberEntity toEntity(HouseholdMember householdMember);
 
   // Entity to Domain
-  @Mapping(target = "userId", source = "user.id")
+  @Mapping(target = "userId", source = "user.id") 
   @Mapping(target = "householdId", source = "household.id")
   HouseholdMember toDomain(HouseholdMemberEntity householdMemberEntity);
 
   // Helper methods
   default UserEntity mapUserIdToEntity(Long userId) {
-    if (userId == null) return null;
+    if (userId == null)
+      return null;
     return UserEntity.builder().id(userId).build();
   }
 
   default HouseholdEntity mapHouseholdIdToEntity(Long householdId) {
-    if (householdId == null) return null;
+    if (householdId == null)
+      return null;
     return HouseholdEntity.builder().id(householdId).build();
   }
 }

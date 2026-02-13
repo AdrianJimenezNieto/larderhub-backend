@@ -6,26 +6,35 @@ import com.larderhub.infrastructure.adapter.out.persistence.user.UserEntity;
 import lombok.Data;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 
-import org.springframework.data.annotation.CreatedDate;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "household_members")
 public class HouseholdMemberEntity {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -39,7 +48,7 @@ public class HouseholdMemberEntity {
   @Enumerated(EnumType.STRING)
   private String role;
 
-  @CreatedDate
-  @Column(name = "joined_at")
+  @CreationTimestamp
+  @Column(name = "joined_at", updatable = false)
   private LocalDateTime joinedAt;
 }

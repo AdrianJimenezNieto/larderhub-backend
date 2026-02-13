@@ -38,7 +38,7 @@ public class UserEntity {
   @Column(nullable = false, length = 255)
   private String password;
 
-  @Column(name = "avatar_url", length = 255)
+  @Column(name = "avatar_url", columnDefinition = "TEXT")
   private String avatarUrl;
 
   @CreationTimestamp
