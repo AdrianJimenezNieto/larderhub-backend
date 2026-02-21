@@ -9,6 +9,7 @@ public class ProductCreateDTO {
   @NotBlank(message = "Product name is required")
   private String name;
 
+  private String category;
   private String barcode;
   private String imageUrl;
   private String standardUnit;

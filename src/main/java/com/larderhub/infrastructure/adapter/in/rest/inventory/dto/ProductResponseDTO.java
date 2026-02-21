@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class ProductResponseDTO {
   private Long id;
   private String name;
+  private String category;
   private String barcode;
   private String imageUrl;
   private String standardUnit;

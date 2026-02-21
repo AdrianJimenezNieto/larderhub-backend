@@ -40,6 +40,7 @@ public class ProductController {
 
     Product product = Product.builder()
         .name(dto.getName())
+        .category(dto.getCategory())
         .barcode(dto.getBarcode())
         .imageUrl(dto.getImageUrl())
         .standardUnit(dto.getStandardUnit())
@@ -80,6 +81,7 @@ public class ProductController {
     return ProductResponseDTO.builder()
         .id(p.getId())
         .name(p.getName())
+        .category(p.getCategory())
         .barcode(p.getBarcode())
         .imageUrl(p.getImageUrl())
         .standardUnit(p.getStandardUnit())

@@ -13,6 +13,7 @@ public class Product {
   private Long id;
   private String barcode;
   private String name;
+  private String category;
   private String imageUrl;
   private String standardUnit;
 }
