@@ -12,4 +12,6 @@ public interface PantryItemPersistencePort {
   List<PantryItem> findByHouseholdId(Long householdId);
 
   void deleteById(Long id);
+
+  boolean existsByIdAndHouseholdId(Long id, Long householdId);
 }

@@ -7,4 +7,6 @@ import java.util.List;
 @Repository
 public interface PantryItemJpaRepository extends JpaRepository<PantryItemEntity, Long> {
   List<PantryItemEntity> findByHousehold_Id(Long householdId);
+
+  boolean existsByIdAndHousehold_Id(Long id, Long householdId);
 }
