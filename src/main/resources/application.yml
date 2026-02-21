@@ -12,10 +12,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update # Caution: Use validate in production
+    # IMPORTANT: data.sql must run AFTER Hibernate creates the tables
+    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true # Helpful for debugging
+
+  # SQL initialization: runs data.sql on every startup (dev only)
+  sql:
+    init:
+      mode: always          # always | never | embedded
+      data-locations: classpath:data.sql
 
 server:
   port: 8080

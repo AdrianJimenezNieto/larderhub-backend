@@ -39,4 +39,9 @@ public class PantryItemPersistenceAdapter implements PantryItemPersistencePort {
   public void deleteById(Long id) {
     pantryItemJpaRepository.deleteById(id);
   }
+
+  @Override
+  public boolean existsByIdAndHouseholdId(Long id, Long householdId) {
+    return pantryItemJpaRepository.existsByIdAndHousehold_Id(id, householdId);
+  }
 }

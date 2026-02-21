@@ -28,6 +28,9 @@ public class ProductEntity {
   @Column(nullable = false)
   private String name;
 
+  @Column(length = 50)
+  private String category;
+
   @Column(name = "image_url", columnDefinition = "TEXT")
   private String imageUrl;
 

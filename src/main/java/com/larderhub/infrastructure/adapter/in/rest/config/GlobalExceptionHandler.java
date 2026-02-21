@@ -2,6 +2,7 @@ package com.larderhub.infrastructure.adapter.in.rest.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -38,6 +39,14 @@ public class GlobalExceptionHandler {
     return ResponseEntity
         .status(HttpStatus.UNAUTHORIZED)
         .body(Map.of("error", "Invalid email or password"));
+  }
+
+  // Handle ownership violations (user trying to access another household's items)
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
+    return ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(Map.of("error", ex.getMessage()));
   }
 
   // Catch-all for unexpected errors

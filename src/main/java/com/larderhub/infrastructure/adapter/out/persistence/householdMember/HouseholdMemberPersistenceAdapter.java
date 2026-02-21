@@ -5,6 +5,8 @@ import org.springframework.stereotype.Repository;
 import com.larderhub.domain.model.HouseholdMember;
 import com.larderhub.domain.ports.out.householdMembers.HouseholdMembersPersistencePort;
 
+import java.util.Optional;
+
 @Repository
 public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersistencePort {
 
@@ -21,5 +23,11 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   public HouseholdMember save(HouseholdMember householdMember) {
     HouseholdMemberEntity householdMemberEntity = householdMemberPersistenceMapper.toEntity(householdMember);
     return householdMemberPersistenceMapper.toDomain(householdMemberJpaRepository.save(householdMemberEntity));
+  }
+
+  @Override
+  public Optional<HouseholdMember> findByUserId(Long userId) {
+    return householdMemberJpaRepository.findByUser_Id(userId)
+        .map(householdMemberPersistenceMapper::toDomain);
   }
 }

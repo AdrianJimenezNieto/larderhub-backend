@@ -1,4 +1,4 @@
-package com.larderhub.domain.model;
+package com.larderhub.infrastructure.adapter.in.rest.inventory.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class ProductResponseDTO {
   private Long id;
-  private String barcode;
   private String name;
   private String category;
+  private String barcode;
   private String imageUrl;
   private String standardUnit;
 }
