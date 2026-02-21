@@ -1,0 +1,22 @@
+INSERT INTO products (barcode, name, category, standard_unit, image_url) VALUES
+('8410000000001', 'Leche Entera 1L',       'Lácteos',   'litros',     'https://img.com/leche.jpg'),
+('8410000000002', 'Yogur Natural',          'Lácteos',   'unidades',   NULL),
+('8410000000003', 'Queso Rallado',          'Lácteos',   'gramos',     NULL),
+('8410000000014', 'Huevos XL (12)',         'Lácteos',   'unidades',   NULL),
+('8410000000004', 'Arroz Redondo 1kg',      'Despensa',  'kilogramos', NULL),
+('8410000000005', 'Pasta Penne 500g',       'Despensa',  'gramos',     NULL),
+('8410000000006', 'Tomate Frito',           'Despensa',  'unidades',   NULL),
+('8410000000007', 'Aceite de Oliva',        'Despensa',  'litros',     NULL),
+('8410000000008', 'Atún en conserva',       'Despensa',  'unidades',   NULL),
+('8410000000009', 'Lentejas Pardinas',      'Despensa',  'gramos',     NULL),
+('8410000000010', 'Café Molido',            'Despensa',  'gramos',     NULL),
+('8410000000020', 'Cereales Avena',         'Despensa',  'gramos',     NULL),
+('8410000000011', 'Manzana Golden',         'Frescos',   'kilogramos', NULL),
+('8410000000012', 'Plátanos',               'Frescos',   'kilogramos', NULL),
+('8410000000013', 'Pechuga de Pollo',       'Frescos',   'gramos',     NULL),
+('8410000000015', 'Agua Mineral 1.5L',      'Bebidas',   'litros',     NULL),
+('8410000000016', 'Vino Tinto',             'Bebidas',   'unidades',   NULL),
+('8410000000017', 'Detergente Ropa',        'Limpieza',  'litros',     NULL),
+('8410000000018', 'Lavavajillas',           'Limpieza',  'unidades',   NULL),
+('8410000000019', 'Papel Higiénico',        'Limpieza',  'unidades',   NULL)
+ON CONFLICT (barcode) DO NOTHING;
