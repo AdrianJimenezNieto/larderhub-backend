@@ -11,12 +11,13 @@ import com.larderhub.infrastructure.adapter.out.persistence.user.UserEntity;
 public interface HouseholdMemberPersistenceMapper {
 
   // Domain to Entity
+  @Mapping(target = "id", ignore = true) // id is managed by JPA (@GeneratedValue)
   @Mapping(source = "userId", target = "user")
   @Mapping(source = "householdId", target = "household")
   HouseholdMemberEntity toEntity(HouseholdMember householdMember);
 
   // Entity to Domain
-  @Mapping(target = "userId", source = "user.id") 
+  @Mapping(target = "userId", source = "user.id")
   @Mapping(target = "householdId", source = "household.id")
   HouseholdMember toDomain(HouseholdMemberEntity householdMemberEntity);
 

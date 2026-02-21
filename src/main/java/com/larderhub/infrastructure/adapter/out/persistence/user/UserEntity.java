@@ -41,6 +41,10 @@ public class UserEntity {
   @Column(name = "avatar_url", columnDefinition = "TEXT")
   private String avatarUrl;
 
+  @Column(nullable = false, length = 20)
+  @Builder.Default
+  private String role = "USER";
+
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;

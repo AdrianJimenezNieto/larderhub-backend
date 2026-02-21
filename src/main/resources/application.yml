@@ -21,3 +21,10 @@ server:
   port: 8080
   error:
     include-message: always
+
+# JWT Configuration
+jwt:
+  # Base64-encoded 256-bit secret key — REPLACE in production with a secure secret
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000  # 24 hours in milliseconds
+
