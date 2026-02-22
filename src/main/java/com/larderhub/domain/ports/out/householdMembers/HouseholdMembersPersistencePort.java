@@ -17,4 +17,11 @@ public interface HouseholdMembersPersistencePort {
   List<HouseholdMember> findByHouseholdId(Long householdId);
 
   boolean existsByUserIdAndHouseholdId(Long userId, Long householdId);
+
+  // Find a specific membership (needed to resolve the member's DB id for deletion
+  // / role check)
+  Optional<HouseholdMember> findByUserIdAndHouseholdId(Long userId, Long householdId);
+
+  // Remove a user from a household
+  void deleteByUserIdAndHouseholdId(Long userId, Long householdId);
 }
