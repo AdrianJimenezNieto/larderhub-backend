@@ -13,7 +13,8 @@
 1. [Auth](#1-auth)
 2. [Households](#2-households)
 3. [Inventario (Despensa)](#3-inventario-despensa)
-4. [Catálogo de Productos](#4-catálogo-de-productos)
+4. [Lista de la Compra](#4-lista-de-la-compra)
+5. [Catálogo de Productos](#5-catálogo-de-productos)
 
 ---
 
@@ -351,7 +352,122 @@ Elimina un item de la despensa.
 
 ---
 
-## 4. Catálogo de Productos
+## 4. Lista de la Compra
+
+> Los items están vinculados al catálogo de productos usando `productId`.
+> El `householdId` va en la URL. El backend valida membresía en cada operación.
+> **Marcar como comprado** (`/check`) mueve el item automáticamente al inventario.
+
+> ⚠️ Si el usuario no es miembro del household, la API devuelve `403 Forbidden`.
+
+---
+
+### `POST /api/v1/households/{householdId}/shopping-list`
+Añade un item manualmente a la lista de la compra.
+
+**¿Requiere token?** ✅ Sí
+
+**Body (JSON):**
+```json
+{
+  "productId": 2,
+  "quantity": 1.0
+}
+```
+
+**Respuesta `201 Created`:**
+```json
+{
+  "id": 5,
+  "householdId": 1,
+  "productId": 2,
+  "productName": "Aceite de Oliva 1L",
+  "productCategory": "Aceites",
+  "standardUnit": "litros",
+  "quantity": 1.0,
+  "checked": false,
+  "addedAt": "2026-02-22T13:00:00"
+}
+```
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro del household |
+| `400` | `productId` o `quantity` nulos / cantidad ≤ 0 / producto no encontrado |
+
+---
+
+### `GET /api/v1/households/{householdId}/shopping-list`
+Lista todos los items de la lista de la compra (checked y unchecked).
+
+**¿Requiere token?** ✅ Sí
+
+**Respuesta `200 OK`:** *(array de `ShoppingItemResponseDTO`)*
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro del household |
+
+---
+
+### `PUT /api/v1/households/{householdId}/shopping-list/{itemId}/check`
+Marca el item como comprado. **Automáticamente lo añade al inventario (pantry).**
+
+**¿Requiere token?** ✅ Sí
+
+**Body:** No requiere body.
+
+**Respuesta `200 OK`:**
+```json
+{
+  "id": 5,
+  "checked": true,
+  ...
+}
+```
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro del household o el item no pertenece a él |
+
+---
+
+### `DELETE /api/v1/households/{householdId}/shopping-list/{itemId}`
+Elimina un item de la lista de la compra.
+
+**¿Requiere token?** ✅ Sí
+
+**Respuesta `204 No Content`** *(sin body)*
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro del household o el item no pertenece a él |
+
+---
+
+### `POST /api/v1/households/{householdId}/shopping-list/generate?threshold=1.0`
+Genera automáticamente la lista añadiendo los productos de la despensa cuya cantidad está por debajo del umbral.
+
+**¿Requiere token?** ✅ Sí
+
+**Query param:** `threshold` (opcional, por defecto `1.0`)
+
+**Respuesta `201 Created`:** *(array de los items nuevos generados)*
+
+**Regla:** Solo añade un producto si no hay ya un item unchecked de ese producto en la lista.
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro del household |
+
+---
+
+## 5. Catálogo de Productos
 
 > El catálogo es **global** y compartido por todos los usuarios.
 > Los productos del catálogo son los que se pueden añadir al inventario con `productId`.
@@ -481,15 +597,21 @@ POST   /api/v1/households/join                               → Unirse con join
 GET    /api/v1/households/mine                               → Mis households
 GET    /api/v1/households/{id}/members                       → Miembros del household
 
-POST   /api/v1/households/{householdId}/inventory            → Añadir item
-GET    /api/v1/households/{householdId}/inventory            → Listar despensa
-PUT    /api/v1/households/{householdId}/inventory/{itemId}   → Actualizar item
-DELETE /api/v1/households/{householdId}/inventory/{itemId}   → Eliminar item
+POST   /api/v1/households/{householdId}/inventory                        → Añadir item
+GET    /api/v1/households/{householdId}/inventory                        → Listar despensa
+PUT    /api/v1/households/{householdId}/inventory/{itemId}               → Actualizar item
+DELETE /api/v1/households/{householdId}/inventory/{itemId}               → Eliminar item
 
-GET    /api/v1/products                                      → Listar catálogo
-GET    /api/v1/products/{id}                                 → Obtener producto
-POST   /api/v1/products                                      → Crear producto
-DELETE /api/v1/products/{id}                                 → Eliminar producto
+POST   /api/v1/households/{householdId}/shopping-list                    → Añadir item manualmente
+GET    /api/v1/households/{householdId}/shopping-list                    → Listar lista de la compra
+PUT    /api/v1/households/{householdId}/shopping-list/{itemId}/check     → Marcar como comprado → mueve a despensa
+DELETE /api/v1/households/{householdId}/shopping-list/{itemId}           → Eliminar item
+POST   /api/v1/households/{householdId}/shopping-list/generate           → Auto-generar desde bajo stock
+
+GET    /api/v1/products                                                  → Listar catálogo
+GET    /api/v1/products/{id}                                             → Obtener producto
+POST   /api/v1/products                                                  → Crear producto
+DELETE /api/v1/products/{id}                                             → Eliminar producto
 ```
 
 ---
