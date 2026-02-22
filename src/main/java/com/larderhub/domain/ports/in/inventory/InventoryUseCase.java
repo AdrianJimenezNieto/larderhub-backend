@@ -7,11 +7,12 @@ import com.larderhub.infrastructure.adapter.in.rest.inventory.dto.PantryItemUpda
 import java.util.List;
 
 public interface InventoryUseCase {
-  PantryItemResponseDTO addItem(PantryItemCreateDTO dto, String username);
+  // householdId is now explicit — client decides which household to operate on
+  PantryItemResponseDTO addItem(Long householdId, PantryItemCreateDTO dto, String username);
 
-  List<PantryItemResponseDTO> listItems(String username);
+  List<PantryItemResponseDTO> listItems(Long householdId, String username);
 
-  PantryItemResponseDTO updateItem(Long itemId, PantryItemUpdateDTO dto, String username);
+  PantryItemResponseDTO updateItem(Long householdId, Long itemId, PantryItemUpdateDTO dto, String username);
 
-  void deleteItem(Long itemId, String username);
+  void deleteItem(Long householdId, Long itemId, String username);
 }

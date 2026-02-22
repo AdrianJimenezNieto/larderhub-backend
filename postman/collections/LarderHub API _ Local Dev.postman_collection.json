@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "larderhub-local-collection",
+    "_postman_id": "24be8f25-4894-43f4-9fc5-5495d17575f6",
     "name": "LarderHub API — Local Dev",
     "description": "Colección completa para probar la API de LarderHub en local (http://localhost:8080).\n\nFlujo de uso recomendado:\n1. Register / Login → el token se guarda automáticamente en {{jwt_token}}\n2. Create Household o Join Household\n3. Operar el inventario",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -22,11 +22,12 @@
                   "  console.log('✅ Token guardado:', res.token.substring(0, 20) + '...');",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "id": "807c5032-1c61-4b8f-bb04-3342239e09e4"
               }
             }
           ],
-          "id": "548f5058-eedf-4621-88a5-2eb9b0f20d28",
+          "id": "211d2c4c-be22-48e6-8a6a-c50a227bcb77",
           "request": {
             "method": "POST",
             "header": [
@@ -66,11 +67,12 @@
                   "  console.log('✅ Token guardado:', res.token.substring(0, 20) + '...');",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "id": "cc23acda-6838-44d8-87ca-1fbbf9bfa77f"
               }
             }
           ],
-          "id": "bd2e0962-a3d7-4295-b65e-554a5b9c7a49",
+          "id": "49982d97-b30b-42e5-8c6a-c5414e967ff3",
           "request": {
             "method": "POST",
             "header": [
@@ -99,7 +101,7 @@
         },
         {
           "name": "Me (datos del token)",
-          "id": "84c89f4e-71a9-42fd-a603-b204072ce5c5",
+          "id": "f0e747b2-1457-4c8f-9418-53e7dc70ed4b",
           "request": {
             "method": "GET",
             "header": [
@@ -123,7 +125,7 @@
           "response": []
         }
       ],
-      "id": "fca80a0a-6869-4fd4-a3fb-ed0ba994f5da"
+      "id": "a58cce53-d06f-4185-96d1-722f2419576f"
     },
     {
       "name": "2. Households",
@@ -142,11 +144,12 @@
                   "  console.log('🔑 Join code:', res.joinCode);",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "id": "f4940d0b-98c5-4ba9-8527-ebeb77ecf07d"
               }
             }
           ],
-          "id": "e5e28ea1-38f0-4c54-b02d-f3d36dec90a3",
+          "id": "638eed62-4f46-46e5-bdf0-7a404b0602e3",
           "request": {
             "method": "POST",
             "header": [
@@ -179,7 +182,7 @@
         },
         {
           "name": "Unirse a un Household",
-          "id": "e5634b86-ca2e-41d7-9524-49b295196dfe",
+          "id": "8f208050-4bbc-4352-b16a-64f30d3a54d0",
           "request": {
             "method": "POST",
             "header": [
@@ -213,7 +216,7 @@
         },
         {
           "name": "Mis Households",
-          "id": "f997c77d-d54f-4682-a944-36fa4992ed66",
+          "id": "d3461e71-b884-458e-a064-43809e73fa62",
           "request": {
             "method": "GET",
             "header": [
@@ -239,7 +242,7 @@
         },
         {
           "name": "Miembros del Household",
-          "id": "6af1b2fe-2b1c-4235-aba8-5c63781c3dac",
+          "id": "8bf11bf3-b31d-441b-9444-5b87ccefbc33",
           "request": {
             "method": "GET",
             "header": [
@@ -265,7 +268,7 @@
           "response": []
         }
       ],
-      "id": "a6317120-58d9-40bf-ae66-702be3ebe918"
+      "id": "1e686791-c50c-48a1-b001-7c1cb1c8dd34"
     },
     {
       "name": "3. Inventario (Despensa)",
@@ -283,11 +286,12 @@
                   "  console.log('✅ Item ID guardado:', res.id);",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "id": "07f4e8d5-7aeb-4492-87e5-10db35e1bf9c"
               }
             }
           ],
-          "id": "a63ea28f-2972-469d-8cc1-28bcb4d967a5",
+          "id": "271fa4dc-bef3-42f2-9b02-e98ff8e1f41f",
           "request": {
             "method": "POST",
             "header": [
@@ -322,7 +326,7 @@
         },
         {
           "name": "Listar Despensa",
-          "id": "104f3bcb-58c1-4e79-9b2a-74b7cda5b246",
+          "id": "e45351ed-1158-41c5-843c-cff8f13e2908",
           "request": {
             "method": "GET",
             "header": [
@@ -349,7 +353,7 @@
         },
         {
           "name": "Actualizar Item",
-          "id": "8e3a38f2-29d7-4767-8624-c06fd2ffd015",
+          "id": "c0288573-5a32-4bd0-a18b-167378aca1de",
           "request": {
             "method": "PUT",
             "header": [
@@ -385,7 +389,7 @@
         },
         {
           "name": "Eliminar Item",
-          "id": "f450bf2b-33a5-4e07-8700-42cc49309f63",
+          "id": "e347c823-ad79-4c9b-b2e6-922b1f2d2305",
           "request": {
             "method": "DELETE",
             "header": [
@@ -412,14 +416,14 @@
           "response": []
         }
       ],
-      "id": "d974de34-8fb0-47df-bbb9-e64342c36a9e"
+      "id": "2d12fb4e-eb84-4c41-b13b-220652ed8fea"
     },
     {
       "name": "4. Catálogo de Productos",
       "item": [
         {
           "name": "Listar Todos los Productos",
-          "id": "7029aa9b-e9d4-45a6-9978-483868aa6781",
+          "id": "1e15ba9e-34dc-48f8-adfa-02f46592f99b",
           "request": {
             "method": "GET",
             "header": [
@@ -444,7 +448,7 @@
         },
         {
           "name": "Obtener Producto por ID",
-          "id": "624b1658-d2d7-49ce-b7d3-ceebb0ed7cd5",
+          "id": "82590836-439d-4d3f-bea5-bf3c565a9034",
           "request": {
             "method": "GET",
             "header": [
@@ -481,11 +485,12 @@
                   "  console.log('✅ Product ID guardado:', res.id);",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "id": "cbddd67a-e083-44e5-a308-7df116c2bd5a"
               }
             }
           ],
-          "id": "4b355722-24ca-4263-ac82-ea8d28c54749",
+          "id": "7222901a-9dee-4b51-b790-351084611f40",
           "request": {
             "method": "POST",
             "header": [
@@ -518,7 +523,7 @@
         },
         {
           "name": "Eliminar Producto",
-          "id": "19a35c21-9bf4-4d35-afa9-f5ba47456677",
+          "id": "44a28b47-1936-44ac-bf4a-7d229c99f745",
           "request": {
             "method": "DELETE",
             "header": [
@@ -543,36 +548,36 @@
           "response": []
         }
       ],
-      "id": "fc4d03e7-0acc-464e-896a-ce18da42049f"
+      "id": "95734bfc-1fd2-4bfa-823c-ba44d13112de"
     }
   ],
   "variable": [
     {
-      "id": "d766e745-4fa1-4e59-966d-5670b22e4e96",
+      "id": "2193662d-c7d6-4d03-a23c-30168938b88e",
       "key": "base_url",
       "value": "http://localhost:8080",
       "type": "string"
     },
     {
-      "id": "ab57de82-462b-4498-a9a5-6201fcdc76d8",
+      "id": "45d011b1-ea98-4867-9bda-29e765291945",
       "key": "jwt_token",
       "value": "",
       "type": "string"
     },
     {
-      "id": "4a9b6559-1474-41c4-9d12-f5ef798ea8d1",
+      "id": "118e3dcc-8af8-4097-bebc-6a0cffba2ad1",
       "key": "household_id",
       "value": "1",
       "type": "string"
     },
     {
-      "id": "66f73a9b-8716-4b4f-accd-5c888965c1b6",
+      "id": "ee5a9c4e-06e5-4cf9-aa3e-fc9237926e35",
       "key": "item_id",
       "value": "1",
       "type": "string"
     },
     {
-      "id": "24291639-acf9-4f8b-992d-bd820077df08",
+      "id": "6d9a17f1-40b5-4079-a427-df21d05d9c53",
       "key": "product_id",
       "value": "1",
       "type": "string"

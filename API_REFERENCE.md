@@ -1,7 +1,7 @@
 # LarderHub API Reference
 
 > **Base URL:** `http://localhost:8080`
-> **Autenticación:** Todos los endpoints (excepto `/api/auth/**` y `/api/health`) requieren el header:
+> **Autenticación:** Todos los endpoints (excepto `/api/auth/**`) requieren el header:
 > ```
 > Authorization: Bearer <JWT_TOKEN>
 > ```
@@ -79,7 +79,7 @@ Inicia sesión y obtiene un JWT.
 ---
 
 ### `GET /api/auth/me`
-Devuelve los datos del usuario autenticado extraídos del JWT (sin consulta a BD).
+Devuelve los datos del usuario autenticado extraídos del JWT.
 
 **¿Requiere token?** ✅ Sí
 
@@ -220,15 +220,15 @@ Lista todos los miembros de un household. Solo accesible si el usuario ya perten
 
 ## 3. Inventario (Despensa)
 
-> El inventario representa los productos que tiene el household del usuario en su despensa.
-> **El `householdId` se resuelve automáticamente desde el JWT** — el frontend no necesita enviarlo.
-> Cada operación actúa sobre el household del usuario autenticado.
+> El inventario representa los productos que tiene el household en su despensa.
+> **El `householdId` va en la URL** — el cliente elige explícitamente sobre qué household actúa.
+> El backend valida que el usuario autenticado sea miembro de ese household antes de cualquier operación.
 
-> ⚠️ **Prerrequisito:** El usuario debe pertenecer a al menos un household. Si no, la API devuelve `500` con el mensaje `"User does not belong to any household"`.
+> ⚠️ Si el usuario no es miembro del household indicado, la API devuelve `403 Forbidden`.
 
 ---
 
-### `POST /api/v1/inventory`
+### `POST /api/v1/households/{householdId}/inventory`
 Añade un producto a la despensa del household.
 
 **¿Requiere token?** ✅ Sí
@@ -260,13 +260,13 @@ Añade un producto a la despensa del household.
 **Errores:**
 | Código | Motivo |
 |--------|--------|
-| `400` | `productId` nulo / `quantity` <= 0 |
-| `400` | Producto no encontrado en el catálogo |
+| `403` | No eres miembro de ese household |
+| `400` | `productId` nulo / `quantity` <= 0 / producto no encontrado |
 
 ---
 
-### `GET /api/v1/inventory`
-Lista todos los items de la despensa del household del usuario.
+### `GET /api/v1/households/{householdId}/inventory`
+Lista todos los items de la despensa del household.
 
 **¿Requiere token?** ✅ Sí
 
@@ -296,9 +296,14 @@ Lista todos los items de la despensa del household del usuario.
 ]
 ```
 
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres miembro de ese household |
+
 ---
 
-### `PUT /api/v1/inventory/{itemId}`
+### `PUT /api/v1/households/{householdId}/inventory/{itemId}`
 Actualiza la cantidad y/o fecha de caducidad de un item.
 
 **¿Requiere token?** ✅ Sí
@@ -328,11 +333,11 @@ Actualiza la cantidad y/o fecha de caducidad de un item.
 **Errores:**
 | Código | Motivo |
 |--------|--------|
-| `403` | El item no pertenece a tu household |
+| `403` | No eres miembro del household o el item no pertenece a él |
 
 ---
 
-### `DELETE /api/v1/inventory/{itemId}`
+### `DELETE /api/v1/households/{householdId}/inventory/{itemId}`
 Elimina un item de la despensa.
 
 **¿Requiere token?** ✅ Sí
@@ -342,14 +347,14 @@ Elimina un item de la despensa.
 **Errores:**
 | Código | Motivo |
 |--------|--------|
-| `403` | El item no pertenece a tu household |
+| `403` | No eres miembro del household o el item no pertenece a él |
 
 ---
 
 ## 4. Catálogo de Productos
 
 > El catálogo es **global** y compartido por todos los usuarios.
-> Los products del catálogo son los que se pueden añadir al inventario con `productId`.
+> Los productos del catálogo son los que se pueden añadir al inventario con `productId`.
 > Al arrancar la aplicación se carga automáticamente con **20 productos de muestra** desde `data.sql`.
 
 ---
@@ -406,14 +411,6 @@ Lista todos los productos del catálogo.
     "barcode": "8410000000001",
     "imageUrl": "https://img.com/leche.jpg",
     "standardUnit": "litros"
-  },
-  {
-    "id": 2,
-    "name": "Yogur Natural",
-    "category": "Lácteos",
-    "barcode": "8410000000002",
-    "imageUrl": null,
-    "standardUnit": "unidades"
   }
 ]
 ```
@@ -472,23 +469,28 @@ Elimina un producto del catálogo.
 
 ---
 
-## 🗺️ Estado actual del proyecto
+## 🗺️ Mapa de Endpoints
 
-### Slices implementados
+```
+POST   /api/auth/register
+POST   /api/auth/login
+GET    /api/auth/me
 
-| Slice | Estado | Descripción |
-|-------|--------|-------------|
-| **Slice 1** — Auth & Onboarding | ✅ Completo | Registro, login, JWT, CORS, RBAC básico |
-| **Slice 2** — Inventario CRUD | ✅ Completo | CRUD de despensa + catálogo de productos |
-| **Slice 3** — Households | ✅ Completo | Crear, unirse, listar grupos y miembros |
+POST   /api/v1/households                                    → Crear household
+POST   /api/v1/households/join                               → Unirse con joinCode
+GET    /api/v1/households/mine                               → Mis households
+GET    /api/v1/households/{id}/members                       → Miembros del household
 
-### Slices pendientes (propuesta)
+POST   /api/v1/households/{householdId}/inventory            → Añadir item
+GET    /api/v1/households/{householdId}/inventory            → Listar despensa
+PUT    /api/v1/households/{householdId}/inventory/{itemId}   → Actualizar item
+DELETE /api/v1/households/{householdId}/inventory/{itemId}   → Eliminar item
 
-| Slice | Descripción |
-|-------|-------------|
-| **Slice 4** — Lista de la compra | Generar lista automática a partir del inventario bajo mínimos |
-| **Slice 5** — Notificaciones de caducidad | Alertas cuando un producto está próximo a caducar |
-| **Slice 6** — Recetas | Sugerir recetas en función de lo que hay en la despensa |
+GET    /api/v1/products                                      → Listar catálogo
+GET    /api/v1/products/{id}                                 → Obtener producto
+POST   /api/v1/products                                      → Crear producto
+DELETE /api/v1/products/{id}                                 → Eliminar producto
+```
 
 ---
 
