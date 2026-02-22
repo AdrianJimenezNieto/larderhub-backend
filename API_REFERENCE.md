@@ -309,11 +309,10 @@ Expulsa a un miembro del household. **Solo ADMIN.** El ADMIN no puede expulsarse
 ---
 
 ### `POST /api/v1/households/{householdId}/inventory`
-Añade un producto a la despensa del household.
+Añade un producto al inventario del household.
+> **Comportamiento Idempotente:** Si el producto ya existe en la despensa, sumará la cantidad enviada en lugar de crear un duplicado. Si existe fecha de caducidad, mantendrá la fecha **más próxima** de las dos (la actual vs. la enviada) por seguridad.
 
-**¿Requiere token?** ✅ Sí
-
-**Body (JSON):**
+**¿Requiere token?** ✅ Sí (y ser miembro del household):
 ```json
 {
   "productId": 3,
@@ -427,11 +426,61 @@ Elimina un item de la despensa.
 **Errores:**
 | Código | Motivo |
 |--------|--------|
-| `403` | No eres miembro del household o el item no pertenece a él |
+| `403` | No eres miembro o el item pertenece a otra casa |
 
 ---
 
-## 4. Lista de la Compra
+## 6. Alertas de Caducidad (Slice 6)
+
+### `GET /api/v1/households/{householdId}/inventory/expired`
+Obtiene la lista de productos de la despensa que ya han caducado (fecha caducidad < fecha de hoy).
+
+**¿Requiere token?** ✅ Sí
+
+**Respuesta `200 OK`:** *(array de items)*
+```json
+[
+  {
+    "id": 10,
+    "productId": 3,
+    "productName": "Queso Rallado",
+    "productBarcode": "8410000000003",
+    "productImageUrl": null,
+    "standardUnit": "gramos",
+    "quantity": 2.5,
+    "expirationDate": "2023-11-20"
+  }
+]
+```
+
+---
+
+### `GET /api/v1/households/{householdId}/inventory/expiring?daysAhead=7`
+Obtiene la lista de productos que caducarán en los próximos `X` días (por defecto, 7 días). Incluye los que caducan hoy, pero **no** incluye a los que ya están caducados en días anteriores.
+
+**¿Requiere token?** ✅ Sí
+
+**Query param:** `daysAhead` (opcional, entero, defecto `7`)
+
+**Respuesta `200 OK`:** *(array de items)*
+```json
+[
+  {
+    "id": 11,
+    "productId": 1,
+    "productName": "Leche Entera",
+    "productBarcode": "8410000000001",
+    "productImageUrl": "...",
+    "standardUnit": "litros",
+    "quantity": 3.0,
+    "expirationDate": "2026-02-25"
+  }
+]
+```
+
+---
+
+## 7. Lista de la Compra (Slice 4)
 
 > Los items están vinculados al catálogo de productos usando `productId`.
 > El `householdId` va en la URL. El backend valida membresía en cada operación.

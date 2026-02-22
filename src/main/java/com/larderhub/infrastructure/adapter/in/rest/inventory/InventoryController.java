@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.RequestParam;
+
 @RestController
 // Nested under households: householdId is explicit in the URL
 @RequestMapping("/api/v1/households/{householdId}/inventory")
@@ -73,5 +75,27 @@ public class InventoryController {
 
     inventoryUseCase.deleteItem(householdId, itemId, userDetails.getUsername());
     return ResponseEntity.noContent().build();
+  }
+
+  // --- Slice 6: Expiration Alerts ---
+
+  // GET /api/v1/households/{householdId}/inventory/expired — List expired items
+  @GetMapping("/expired")
+  public ResponseEntity<List<PantryItemResponseDTO>> getExpiredItems(
+      @PathVariable Long householdId,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    return ResponseEntity.ok(inventoryUseCase.getExpiredItems(householdId, userDetails.getUsername()));
+  }
+
+  // GET /api/v1/households/{householdId}/inventory/expiring?daysAhead=7 — List
+  // expiring items
+  @GetMapping("/expiring")
+  public ResponseEntity<List<PantryItemResponseDTO>> getExpiringItems(
+      @PathVariable Long householdId,
+      @RequestParam(defaultValue = "7") int daysAhead,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    return ResponseEntity.ok(inventoryUseCase.getExpiringItems(householdId, daysAhead, userDetails.getUsername()));
   }
 }

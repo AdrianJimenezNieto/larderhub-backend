@@ -5,6 +5,7 @@ import com.larderhub.domain.ports.out.pantry.PantryItemPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,5 +44,27 @@ public class PantryItemPersistenceAdapter implements PantryItemPersistencePort {
   @Override
   public boolean existsByIdAndHouseholdId(Long id, Long householdId) {
     return pantryItemJpaRepository.existsByIdAndHousehold_Id(id, householdId);
+  }
+
+  @Override
+  public Optional<PantryItem> findByHouseholdIdAndProductId(Long householdId, Long productId) {
+    return pantryItemJpaRepository.findByHousehold_IdAndProduct_Id(householdId, productId)
+        .map(pantryItemPersistenceMapper::toDomain);
+  }
+
+  @Override
+  public List<PantryItem> findExpiredItems(Long householdId, LocalDate currentDate) {
+    return pantryItemJpaRepository.findByHousehold_IdAndExpirationDateBefore(householdId, currentDate)
+        .stream()
+        .map(pantryItemPersistenceMapper::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<PantryItem> findExpiringItems(Long householdId, LocalDate startDate, LocalDate endDate) {
+    return pantryItemJpaRepository.findByHousehold_IdAndExpirationDateBetween(householdId, startDate, endDate)
+        .stream()
+        .map(pantryItemPersistenceMapper::toDomain)
+        .collect(Collectors.toList());
   }
 }
