@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,15 +51,38 @@ public class InventoryService implements InventoryUseCase {
     Product product = productPersistencePort.findById(dto.getProductId())
         .orElseThrow(() -> new IllegalArgumentException("Product not found: " + dto.getProductId()));
 
-    PantryItem item = PantryItem.builder()
-        .householdId(householdId)
-        .productId(product.getId())
-        .quantity(dto.getQuantity())
-        .expirationDate(dto.getExpirationDate())
-        .build();
+    // Idempotency check: if the product already exists in the pantry, sum the
+    // quantity
+    return pantryItemPersistencePort.findByHouseholdIdAndProductId(householdId, product.getId())
+        .map(existingItem -> {
+          // Sum the new quantity to the existing one
+          existingItem.setQuantity(existingItem.getQuantity().add(dto.getQuantity()));
 
-    PantryItem saved = pantryItemPersistencePort.save(item);
-    return toResponseDTO(saved, product);
+          // If both have expiration dates, keep the nearest one (safest for food)
+          // If only one has it, keep that one
+          LocalDate existingDate = existingItem.getExpirationDate();
+          LocalDate incomingDate = dto.getExpirationDate();
+          if (existingDate != null && incomingDate != null) {
+            existingItem.setExpirationDate(existingDate.isBefore(incomingDate) ? existingDate : incomingDate);
+          } else if (incomingDate != null) {
+            existingItem.setExpirationDate(incomingDate);
+          }
+
+          PantryItem updated = pantryItemPersistencePort.save(existingItem);
+          return toResponseDTO(updated, product);
+        })
+        .orElseGet(() -> {
+          // If it doesn't exist, create a new one
+          PantryItem newItem = PantryItem.builder()
+              .householdId(householdId)
+              .productId(product.getId())
+              .quantity(dto.getQuantity())
+              .expirationDate(dto.getExpirationDate())
+              .build();
+
+          PantryItem saved = pantryItemPersistencePort.save(newItem);
+          return toResponseDTO(saved, product);
+        });
   }
 
   @Override
@@ -115,6 +139,38 @@ public class InventoryService implements InventoryUseCase {
     }
 
     pantryItemPersistencePort.deleteById(itemId);
+  }
+
+  // --- Slice 6: Expiration Alerts ---
+
+  @Override
+  public List<PantryItemResponseDTO> getExpiredItems(Long householdId, String username) {
+    resolveAndValidateMembership(username, householdId);
+
+    LocalDate today = LocalDate.now();
+    return pantryItemPersistencePort.findExpiredItems(householdId, today).stream()
+        .map(item -> {
+          Product product = productPersistencePort.findById(item.getProductId())
+              .orElseThrow(() -> new IllegalStateException("Product not found"));
+          return toResponseDTO(item, product);
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<PantryItemResponseDTO> getExpiringItems(Long householdId, int daysAhead, String username) {
+    resolveAndValidateMembership(username, householdId);
+
+    LocalDate today = LocalDate.now();
+    LocalDate limitDate = today.plusDays(daysAhead);
+
+    return pantryItemPersistencePort.findExpiringItems(householdId, today, limitDate).stream()
+        .map(item -> {
+          Product product = productPersistencePort.findById(item.getProductId())
+              .orElseThrow(() -> new IllegalStateException("Product not found"));
+          return toResponseDTO(item, product);
+        })
+        .collect(Collectors.toList());
   }
 
   // Map domain objects to response DTO

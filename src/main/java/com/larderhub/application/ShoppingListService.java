@@ -93,14 +93,23 @@ public class ShoppingListService implements ShoppingListUseCase {
     item.setChecked(true);
     ShoppingItem updated = shoppingItemPersistencePort.save(item);
 
-    // Also add the item to the pantry so the pantry is updated automatically
-    PantryItem pantryItem = PantryItem.builder()
-        .householdId(householdId)
-        .productId(item.getProductId())
-        // PantryItem.quantity is BigDecimal; convert from Double
-        .quantity(BigDecimal.valueOf(item.getQuantity()))
-        .build();
-    pantryItemPersistencePort.save(pantryItem);
+    // Also add the item to the pantry idempotently (sum quantity if exists)
+    pantryItemPersistencePort.findByHouseholdIdAndProductId(householdId, item.getProductId())
+        .ifPresentOrElse(
+            existingPantryItem -> {
+              existingPantryItem.setQuantity(
+                  existingPantryItem.getQuantity().add(BigDecimal.valueOf(item.getQuantity())));
+              pantryItemPersistencePort.save(existingPantryItem);
+            },
+            () -> {
+              PantryItem newPantryItem = PantryItem.builder()
+                  .householdId(householdId)
+                  .productId(item.getProductId())
+                  .quantity(BigDecimal.valueOf(item.getQuantity()))
+                  .expirationDate(null) // Bought from shopping list: no exp date by default
+                  .build();
+              pantryItemPersistencePort.save(newPantryItem);
+            });
 
     Product product = productPersistencePort.findById(updated.getProductId())
         .orElseThrow(() -> new IllegalStateException("Product not found"));

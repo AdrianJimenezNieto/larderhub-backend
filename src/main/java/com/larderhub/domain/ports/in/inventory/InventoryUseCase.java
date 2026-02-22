@@ -15,4 +15,9 @@ public interface InventoryUseCase {
   PantryItemResponseDTO updateItem(Long householdId, Long itemId, PantryItemUpdateDTO dto, String username);
 
   void deleteItem(Long householdId, Long itemId, String username);
+
+  // Alerts
+  List<PantryItemResponseDTO> getExpiredItems(Long householdId, String username);
+
+  List<PantryItemResponseDTO> getExpiringItems(Long householdId, int daysAhead, String username);
 }
