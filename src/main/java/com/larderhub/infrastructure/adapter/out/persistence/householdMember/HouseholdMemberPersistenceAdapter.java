@@ -1,6 +1,7 @@
 package com.larderhub.infrastructure.adapter.out.persistence.householdMember;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.larderhub.domain.model.HouseholdMember;
 import com.larderhub.domain.ports.out.householdMembers.HouseholdMembersPersistencePort;
@@ -10,6 +11,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
+// @Transactional keeps the session open so MapStruct can resolve
+// lazy-loaded user.id and household.id when mapping back to domain
+@Transactional
 public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersistencePort {
 
   private final HouseholdMemberJpaRepository householdMemberJpaRepository;
@@ -28,6 +32,7 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Optional<HouseholdMember> findByUserId(Long userId) {
     // Returns the first membership found (used by InventoryService)
     return householdMemberJpaRepository.findByUser_Id(userId)
@@ -35,6 +40,7 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<HouseholdMember> findAllByUserId(Long userId) {
     // Returns ALL memberships for a user (used by HouseholdService)
     return householdMemberJpaRepository.findAllByUser_Id(userId).stream()
@@ -43,6 +49,7 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<HouseholdMember> findByHouseholdId(Long householdId) {
     return householdMemberJpaRepository.findByHousehold_Id(householdId).stream()
         .map(householdMemberPersistenceMapper::toDomain)
@@ -50,6 +57,7 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   }
 
   @Override
+  @Transactional(readOnly = true)
   public boolean existsByUserIdAndHouseholdId(Long userId, Long householdId) {
     return householdMemberJpaRepository.existsByUser_IdAndHousehold_Id(userId, householdId);
   }
