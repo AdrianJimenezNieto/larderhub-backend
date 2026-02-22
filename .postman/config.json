@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "071468d6-6c77-4044-8dc6-fce808cad31d"
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [],
+    "collections": [
+      "..\\LarderHub.postman_collection.json"
+    ]
+  }
+}

@@ -24,49 +24,54 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/inventory")
+// Nested under households: householdId is explicit in the URL
+@RequestMapping("/api/v1/households/{householdId}/inventory")
 @RequiredArgsConstructor
 public class InventoryController {
 
   private final InventoryUseCase inventoryUseCase;
 
-  // POST /api/v1/inventory — Add a new item to the authenticated user's pantry
+  // POST /api/v1/households/{householdId}/inventory — Add an item to the
+  // household pantry
   @PostMapping
   public ResponseEntity<PantryItemResponseDTO> addItem(
+      @PathVariable Long householdId,
       @Valid @RequestBody PantryItemCreateDTO dto,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    PantryItemResponseDTO response = inventoryUseCase.addItem(dto, userDetails.getUsername());
+    PantryItemResponseDTO response = inventoryUseCase.addItem(householdId, dto, userDetails.getUsername());
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  // GET /api/v1/inventory — List all items from the authenticated user's pantry
+  // GET /api/v1/households/{householdId}/inventory — List all items in the pantry
   @GetMapping
   public ResponseEntity<List<PantryItemResponseDTO>> listItems(
+      @PathVariable Long householdId,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    return ResponseEntity.ok(inventoryUseCase.listItems(userDetails.getUsername()));
+    return ResponseEntity.ok(inventoryUseCase.listItems(householdId, userDetails.getUsername()));
   }
 
-  // PUT /api/v1/inventory/{itemId} — Update quantity or expiration date of an
-  // item
+  // PUT /api/v1/households/{householdId}/inventory/{itemId} — Update an item
   @PutMapping("/{itemId}")
   public ResponseEntity<PantryItemResponseDTO> updateItem(
+      @PathVariable Long householdId,
       @PathVariable Long itemId,
       @Valid @RequestBody PantryItemUpdateDTO dto,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    PantryItemResponseDTO response = inventoryUseCase.updateItem(itemId, dto, userDetails.getUsername());
+    PantryItemResponseDTO response = inventoryUseCase.updateItem(householdId, itemId, dto, userDetails.getUsername());
     return ResponseEntity.ok(response);
   }
 
-  // DELETE /api/v1/inventory/{itemId} — Remove an item from the pantry
+  // DELETE /api/v1/households/{householdId}/inventory/{itemId} — Remove an item
   @DeleteMapping("/{itemId}")
   public ResponseEntity<Void> deleteItem(
+      @PathVariable Long householdId,
       @PathVariable Long itemId,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    inventoryUseCase.deleteItem(itemId, userDetails.getUsername());
+    inventoryUseCase.deleteItem(householdId, itemId, userDetails.getUsername());
     return ResponseEntity.noContent().build();
   }
 }

@@ -1,6 +1,5 @@
 package com.larderhub.application;
 
-import com.larderhub.domain.model.HouseholdMember;
 import com.larderhub.domain.model.PantryItem;
 import com.larderhub.domain.model.Product;
 import com.larderhub.domain.model.User;
@@ -30,20 +29,22 @@ public class InventoryService implements InventoryUseCase {
   private final UserPersistencePort userPersistencePort;
   private final HouseholdMembersPersistencePort householdMembersPersistencePort;
 
-  // Resolve the householdId for the authenticated user
-  private Long resolveHouseholdId(String username) {
+  // Validate that the authenticated user belongs to the requested household
+  private User resolveAndValidateMembership(String username, Long householdId) {
     User user = userPersistencePort.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
 
-    HouseholdMember membership = householdMembersPersistencePort.findByUserId(user.getId())
-        .orElseThrow(() -> new IllegalStateException("User does not belong to any household"));
+    if (!householdMembersPersistencePort.existsByUserIdAndHouseholdId(user.getId(), householdId)) {
+      throw new AccessDeniedException("You are not a member of household " + householdId);
+    }
 
-    return membership.getHouseholdId();
+    return user;
   }
 
   @Override
-  public PantryItemResponseDTO addItem(PantryItemCreateDTO dto, String username) {
-    Long householdId = resolveHouseholdId(username);
+  public PantryItemResponseDTO addItem(Long householdId, PantryItemCreateDTO dto, String username) {
+    // Membership check — user must belong to the target household
+    resolveAndValidateMembership(username, householdId);
 
     // Validate that the product exists in the catalog
     Product product = productPersistencePort.findById(dto.getProductId())
@@ -61,8 +62,9 @@ public class InventoryService implements InventoryUseCase {
   }
 
   @Override
-  public List<PantryItemResponseDTO> listItems(String username) {
-    Long householdId = resolveHouseholdId(username);
+  public List<PantryItemResponseDTO> listItems(Long householdId, String username) {
+    // Membership check — user must belong to the target household
+    resolveAndValidateMembership(username, householdId);
 
     return pantryItemPersistencePort.findByHouseholdId(householdId).stream()
         .map(item -> {
@@ -74,12 +76,14 @@ public class InventoryService implements InventoryUseCase {
   }
 
   @Override
-  public PantryItemResponseDTO updateItem(Long itemId, PantryItemUpdateDTO dto, String username) {
-    Long householdId = resolveHouseholdId(username);
+  public PantryItemResponseDTO updateItem(Long householdId, Long itemId, PantryItemUpdateDTO dto, String username) {
+    // Membership check
+    resolveAndValidateMembership(username, householdId);
 
-    // Ensure the item belongs to this user's household (ownership check)
+    // Ensure the item belongs to this specific household (prevents cross-household
+    // tampering)
     if (!pantryItemPersistencePort.existsByIdAndHouseholdId(itemId, householdId)) {
-      throw new AccessDeniedException("Item does not belong to your household");
+      throw new AccessDeniedException("Item " + itemId + " does not belong to household " + householdId);
     }
 
     PantryItem existing = pantryItemPersistencePort.findById(itemId)
@@ -101,12 +105,13 @@ public class InventoryService implements InventoryUseCase {
   }
 
   @Override
-  public void deleteItem(Long itemId, String username) {
-    Long householdId = resolveHouseholdId(username);
+  public void deleteItem(Long householdId, Long itemId, String username) {
+    // Membership check
+    resolveAndValidateMembership(username, householdId);
 
-    // Ownership check before deleting
+    // Ensure the item belongs to this household before deleting
     if (!pantryItemPersistencePort.existsByIdAndHouseholdId(itemId, householdId)) {
-      throw new AccessDeniedException("Item does not belong to your household");
+      throw new AccessDeniedException("Item " + itemId + " does not belong to household " + householdId);
     }
 
     pantryItemPersistencePort.deleteById(itemId);

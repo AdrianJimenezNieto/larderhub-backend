@@ -1,8 +1,8 @@
-package com.larderhub.domain.model;
+package com.larderhub.infrastructure.adapter.in.rest.household.dto;
 
-import lombok.Data;
-import lombok.Builder;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class HouseholdMember {
+public class MemberResponse {
   private Long userId;
-  private Long householdId;
+  private String username;
   private String role;
   private LocalDateTime joinedAt;
 }

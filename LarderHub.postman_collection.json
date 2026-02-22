@@ -1,0 +1,581 @@
+{
+  "info": {
+    "_postman_id": "larderhub-local-collection",
+    "name": "LarderHub API — Local Dev",
+    "description": "Colección completa para probar la API de LarderHub en local (http://localhost:8080).\n\nFlujo de uso recomendado:\n1. Register / Login → el token se guarda automáticamente en {{jwt_token}}\n2. Create Household o Join Household\n3. Operar el inventario",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('jwt_token', res.token);",
+                  "  console.log('✅ Token guardado:', res.token.substring(0, 20) + '...');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "548f5058-eedf-4621-88a5-2eb9b0f20d28",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"adriandev\",\n  \"email\": \"adrian@example.com\",\n  \"password\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('jwt_token', res.token);",
+                  "  console.log('✅ Token guardado:', res.token.substring(0, 20) + '...');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "bd2e0962-a3d7-4295-b65e-554a5b9c7a49",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"adrian@example.com\",\n  \"password\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me (datos del token)",
+          "id": "84c89f4e-71a9-42fd-a603-b204072ce5c5",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "fca80a0a-6869-4fd4-a3fb-ed0ba994f5da"
+    },
+    {
+      "name": "2. Households",
+      "item": [
+        {
+          "name": "Crear Household",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('household_id', res.id);",
+                  "  console.log('✅ Household ID guardado:', res.id);",
+                  "  console.log('🔑 Join code:', res.joinCode);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "e5e28ea1-38f0-4c54-b02d-f3d36dec90a3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Casa de Adrián\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/households",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unirse a un Household",
+          "id": "e5634b86-ca2e-41d7-9524-49b295196dfe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"joinCode\": \"XXXXXXXX\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/join",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "join"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis Households",
+          "id": "f997c77d-d54f-4682-a944-36fa4992ed66",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/mine",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Miembros del Household",
+          "id": "6af1b2fe-2b1c-4235-aba8-5c63781c3dac",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/{{household_id}}/members",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{household_id}}",
+                "members"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "a6317120-58d9-40bf-ae66-702be3ebe918"
+    },
+    {
+      "name": "3. Inventario (Despensa)",
+      "item": [
+        {
+          "name": "Añadir Item a la Despensa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('item_id', res.id);",
+                  "  console.log('✅ Item ID guardado:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "a63ea28f-2972-469d-8cc1-28bcb4d967a5",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 3.0,\n  \"expirationDate\": \"2026-05-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/{{household_id}}/inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{household_id}}",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Despensa",
+          "id": "104f3bcb-58c1-4e79-9b2a-74b7cda5b246",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/{{household_id}}/inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{household_id}}",
+                "inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Item",
+          "id": "8e3a38f2-29d7-4767-8624-c06fd2ffd015",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 1.5,\n  \"expirationDate\": \"2026-06-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/{{household_id}}/inventory/{{item_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{household_id}}",
+                "inventory",
+                "{{item_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Item",
+          "id": "f450bf2b-33a5-4e07-8700-42cc49309f63",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/households/{{household_id}}/inventory/{{item_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{household_id}}",
+                "inventory",
+                "{{item_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "d974de34-8fb0-47df-bbb9-e64342c36a9e"
+    },
+    {
+      "name": "4. Catálogo de Productos",
+      "item": [
+        {
+          "name": "Listar Todos los Productos",
+          "id": "7029aa9b-e9d4-45a6-9978-483868aa6781",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Producto por ID",
+          "id": "624b1658-d2d7-49ce-b7d3-ceebb0ed7cd5",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('product_id', res.id);",
+                  "  console.log('✅ Product ID guardado:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "4b355722-24ca-4263-ac82-ea8d28c54749",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mantequilla\",\n  \"category\": \"Lácteos\",\n  \"barcode\": \"8410000000099\",\n  \"imageUrl\": null,\n  \"standardUnit\": \"gramos\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Producto",
+          "id": "19a35c21-9bf4-4d35-afa9-f5ba47456677",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "fc4d03e7-0acc-464e-896a-ce18da42049f"
+    }
+  ],
+  "variable": [
+    {
+      "id": "d766e745-4fa1-4e59-966d-5670b22e4e96",
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "id": "ab57de82-462b-4498-a9a5-6201fcdc76d8",
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "id": "4a9b6559-1474-41c4-9d12-f5ef798ea8d1",
+      "key": "household_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "id": "66f73a9b-8716-4b4f-accd-5c888965c1b6",
+      "key": "item_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "id": "24291639-acf9-4f8b-992d-bd820077df08",
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}
