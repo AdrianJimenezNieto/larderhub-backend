@@ -2,8 +2,10 @@ package com.larderhub.domain.ports.in.household;
 
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.CreateHouseholdRequest;
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.HouseholdResponse;
+import com.larderhub.infrastructure.adapter.in.rest.household.dto.InviteMemberRequest;
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.JoinHouseholdRequest;
 import com.larderhub.infrastructure.adapter.in.rest.household.dto.MemberResponse;
+import com.larderhub.infrastructure.adapter.in.rest.household.dto.UserSearchResultDTO;
 
 import java.util.List;
 
@@ -19,4 +21,13 @@ public interface HouseholdUseCase {
 
   // List all members of a household (user must be a member)
   List<MemberResponse> getMembers(Long householdId, String username);
+
+  // [ADMIN] Search users by partial, case-insensitive username or email fragment
+  List<UserSearchResultDTO> searchUser(Long householdId, String query, String adminUsername);
+
+  // [ADMIN] Add a user to the household by username or email
+  MemberResponse inviteMember(Long householdId, InviteMemberRequest request, String adminUsername);
+
+  // [ADMIN] Remove a member from the household
+  void removeMember(Long householdId, Long targetUserId, String adminUsername);
 }

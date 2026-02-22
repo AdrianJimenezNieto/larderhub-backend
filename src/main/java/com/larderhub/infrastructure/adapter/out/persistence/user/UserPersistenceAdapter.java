@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -51,5 +53,16 @@ public class UserPersistenceAdapter implements UserPersistencePort {
   @Override
   public boolean existsByUsername(String username) {
     return userJpaRepository.existsByUsername(username);
+  }
+
+  @Override
+  public List<User> searchByQuery(String query) {
+    // Search for users whose username OR email contains the query
+    // (case-insensitive)
+    return userJpaRepository
+        .findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query)
+        .stream()
+        .map(userPersistenceMapper::toDomain)
+        .collect(Collectors.toList());
   }
 }

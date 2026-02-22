@@ -101,3 +101,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 diagramas/
+
+# ==============================================================================
+# INTERNAL DEV DOCS (useful locally, not needed in repo)
+# ==============================================================================
+SLICES_PLAN.md

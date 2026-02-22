@@ -219,6 +219,85 @@ Lista todos los miembros de un household. Solo accesible si el usuario ya perten
 
 ---
 
+### `GET /api/v1/households/{id}/members/search?q=fragmento`
+Busca usuarios cuyo **username o email contenga** el fragmento indicado (búsqueda parcial e insensitiva a mayúsculas). **Solo ADMIN.**
+
+**¿Requiere token?** ✅ Sí · 🔒 ADMIN del household
+
+**Query param:** `q` (fragmento de username o email)
+
+**Respuesta `200 OK`:** *(array, puede estar vacío)*
+```json
+[
+  {
+    "id": 5,
+    "username": "maria99",
+    "email": "maria@example.com",
+    "alreadyMember": false
+  },
+  {
+    "id": 8,
+    "username": "mariajose",
+    "email": "mj@example.com",
+    "alreadyMember": true
+  }
+]
+```
+> Si no hay coincidencias, devuelve `[]` (array vacío).
+
+**Errores:**
+| Código | Motivo |
+|--------|---------|
+| `403` | No eres ADMIN de este household |
+
+---
+
+### `POST /api/v1/households/{id}/members/invite`
+Añade directamente un usuario al household por username o email. **Solo ADMIN.**
+
+**¿Requiere token?** ✅ Sí · 🔒 ADMIN del household
+
+**Body (JSON):**
+```json
+{ "query": "maria99" }
+```
+> `query` puede ser un username **o** un email.
+
+**Respuesta `201 Created`:**
+```json
+{
+  "userId": 5,
+  "username": "maria99",
+  "role": "MEMBER",
+  "joinedAt": "2026-02-22T17:30:00"
+}
+```
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres ADMIN de este household |
+| `400` | Usuario no encontrado o ya es miembro |
+
+---
+
+### `DELETE /api/v1/households/{id}/members/{memberId}`
+Expulsa a un miembro del household. **Solo ADMIN.** El ADMIN no puede expulsarse a sí mismo.
+
+**¿Requiere token?** ✅ Sí · 🔒 ADMIN del household
+
+> `memberId` es el **userId** del miembro a expulsar.
+
+**Respuesta `204 No Content`** *(sin body)*
+
+**Errores:**
+| Código | Motivo |
+|--------|--------|
+| `403` | No eres ADMIN de este household |
+| `400` | El usuario no es miembro · Intentas expulsarte a ti mismo |
+
+---
+
 ## 3. Inventario (Despensa)
 
 > El inventario representa los productos que tiene el household en su despensa.

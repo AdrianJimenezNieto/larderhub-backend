@@ -19,4 +19,8 @@ public interface HouseholdMemberJpaRepository extends JpaRepository<HouseholdMem
 
   // Check if a user is already member of a household (prevent duplicates)
   boolean existsByUser_IdAndHousehold_Id(Long userId, Long householdId);
+
+  // Find a specific membership by userId + householdId (used for removal and role
+  // check)
+  Optional<HouseholdMemberEntity> findByUser_IdAndHousehold_Id(Long userId, Long householdId);
 }

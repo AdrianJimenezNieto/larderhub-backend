@@ -2,6 +2,7 @@ package com.larderhub.domain.ports.out.user;
 
 import com.larderhub.domain.model.User;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserPersistencePort {
@@ -16,4 +17,7 @@ public interface UserPersistencePort {
   boolean existsByEmail(String email);
 
   boolean existsByUsername(String username);
+
+  // Partial, case-insensitive search by username OR email fragment
+  List<User> searchByQuery(String query);
 }

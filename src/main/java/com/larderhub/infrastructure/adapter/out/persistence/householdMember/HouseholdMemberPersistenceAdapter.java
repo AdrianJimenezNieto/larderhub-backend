@@ -61,4 +61,18 @@ public class HouseholdMemberPersistenceAdapter implements HouseholdMembersPersis
   public boolean existsByUserIdAndHouseholdId(Long userId, Long householdId) {
     return householdMemberJpaRepository.existsByUser_IdAndHousehold_Id(userId, householdId);
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<HouseholdMember> findByUserIdAndHouseholdId(Long userId, Long householdId) {
+    return householdMemberJpaRepository.findByUser_IdAndHousehold_Id(userId, householdId)
+        .map(householdMemberPersistenceMapper::toDomain);
+  }
+
+  @Override
+  public void deleteByUserIdAndHouseholdId(Long userId, Long householdId) {
+    // Find the entity first so we can delete by its primary key
+    householdMemberJpaRepository.findByUser_IdAndHousehold_Id(userId, householdId)
+        .ifPresent(entity -> householdMemberJpaRepository.deleteById(entity.getId()));
+  }
 }
