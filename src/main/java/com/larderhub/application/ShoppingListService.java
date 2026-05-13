@@ -14,6 +14,7 @@ import com.larderhub.infrastructure.adapter.in.rest.shopping.dto.ShoppingItemCre
 import com.larderhub.infrastructure.adapter.in.rest.shopping.dto.ShoppingItemResponseDTO;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,14 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ShoppingListService implements ShoppingListUseCase {
 
   private final ShoppingItemPersistencePort shoppingItemPersistencePort;
@@ -67,12 +72,19 @@ public class ShoppingListService implements ShoppingListUseCase {
   public List<ShoppingItemResponseDTO> listItems(Long householdId, String username) {
     resolveAndValidateMembership(username, householdId);
 
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
+
     return shoppingItemPersistencePort.findByHouseholdId(householdId).stream()
         .map(item -> {
-          Product product = productPersistencePort.findById(item.getProductId())
-              .orElseThrow(() -> new IllegalStateException("Product not found for shopping item"));
+          Product product = productsById.get(item.getProductId());
+          if (product == null) {
+            log.warn("Orphaned shopping item id={} references missing product id={}", item.getId(), item.getProductId());
+            return null;
+          }
           return toResponseDTO(item, product);
         })
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
@@ -109,7 +121,7 @@ public class ShoppingListService implements ShoppingListUseCase {
             });
 
     Product product = productPersistencePort.findById(updated.getProductId())
-        .orElseThrow(() -> new IllegalStateException("Product not found"));
+        .orElseThrow(() -> new IllegalArgumentException("El producto de este artículo ya no existe en el catálogo"));
 
     return toResponseDTO(updated, product);
   }
@@ -132,6 +144,14 @@ public class ShoppingListService implements ShoppingListUseCase {
     // umbral por defecto: 1 unidad
     BigDecimal effectiveThreshold = BigDecimal.valueOf((threshold != null) ? threshold : 1.0);
 
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
+
+    Set<Long> alreadyInCartIds = shoppingItemPersistencePort.findByHouseholdId(householdId).stream()
+        .filter(s -> !s.isChecked())
+        .map(ShoppingItem::getProductId)
+        .collect(Collectors.toSet());
+
     List<PantryItem> lowStockItems = pantryItemPersistencePort.findByHouseholdId(householdId).stream()
         .filter(pi -> pi.getQuantity().compareTo(effectiveThreshold) <= 0)
         .collect(Collectors.toList());
@@ -139,14 +159,13 @@ public class ShoppingListService implements ShoppingListUseCase {
     List<ShoppingItemResponseDTO> generated = new ArrayList<>();
 
     for (PantryItem pantryItem : lowStockItems) {
-      Product product = productPersistencePort.findById(pantryItem.getProductId())
-          .orElseThrow(() -> new IllegalStateException("Product not found"));
+      Product product = productsById.get(pantryItem.getProductId());
+      if (product == null) {
+        log.warn("Orphaned pantry item id={} references missing product id={}", pantryItem.getId(), pantryItem.getProductId());
+        continue;
+      }
 
-      // no duplicar items ya pendientes en la lista
-      boolean alreadyInList = shoppingItemPersistencePort.findByHouseholdId(householdId).stream()
-          .anyMatch(s -> s.getProductId().equals(pantryItem.getProductId()) && !s.isChecked());
-
-      if (!alreadyInList) {
+      if (!alreadyInCartIds.contains(pantryItem.getProductId())) {
         ShoppingItem item = ShoppingItem.builder()
             .householdId(householdId)
             .productId(product.getId())
