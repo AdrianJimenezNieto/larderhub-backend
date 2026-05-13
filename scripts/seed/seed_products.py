@@ -70,51 +70,55 @@ def main() -> None:
             unit="prod",
             leave=True,
         ) as bar:
-            for product in fetch_by_category(off_tag, page_size=fetch_limit):
-                if collected >= args.per_category:
-                    break
+            try:
+                for product in fetch_by_category(off_tag, page_size=fetch_limit):
+                    if collected >= args.per_category:
+                        break
 
-                barcode = product["barcode"]
+                    barcode = product["barcode"]
 
-                # Idempotencia local (antes de llamar al backend)
-                if barcode and barcode in existing_barcodes:
-                    cat_counters["skipped"] += 1
-                    counters["skipped"] += 1
-                    continue
+                    # Idempotencia local (antes de llamar al backend)
+                    if barcode and barcode in existing_barcodes:
+                        cat_counters["skipped"] += 1
+                        counters["skipped"] += 1
+                        continue
 
-                # Resolver la categoría española a partir de los tags del producto
-                # (puede diferir de la categoría buscada si la API devuelve supersets)
-                resolved = resolve_category(product["categories_tags"]) or category_es
+                    # Resolver la categoría española a partir de los tags del producto
+                    # (puede diferir de la categoría buscada si la API devuelve supersets)
+                    resolved = resolve_category(product["categories_tags"]) or category_es
 
-                unit = standard_unit(product.get("quantity"))
+                    unit = standard_unit(product.get("quantity"))
 
-                if args.dry_run:
-                    tqdm.write(
-                        f"    [DRY] {product['name'][:55]:<55} "
-                        f"barcode={barcode or 'N/A':<14} "
-                        f"categoría={resolved}  unidad={unit}"
-                    )
-                    cat_counters["created"] += 1
-                    counters["created"] += 1
-                else:
-                    result = client.create_product(
-                        name=product["name"],
-                        category=resolved,
-                        barcode=barcode,
-                        image_url=product.get("image_url"),
-                        standard_unit=unit,
-                    )
-                    status = result["status"]
-                    cat_counters[status] += 1
-                    counters[status] += 1
+                    if args.dry_run:
+                        tqdm.write(
+                            f"    [DRY] {product['name'][:55]:<55} "
+                            f"barcode={barcode or 'N/A':<14} "
+                            f"categoría={resolved}  unidad={unit}"
+                        )
+                        cat_counters["created"] += 1
+                        counters["created"] += 1
+                    else:
+                        result = client.create_product(
+                            name=product["name"],
+                            category=resolved,
+                            barcode=barcode,
+                            image_url=product.get("image_url"),
+                            standard_unit=unit,
+                        )
+                        status = result["status"]
+                        cat_counters[status] += 1
+                        counters[status] += 1
 
-                    if status == "error":
-                        tqdm.write(f"    ERROR {product['name'][:40]}: {result.get('reason')}")
-                    elif barcode:
-                        existing_barcodes.add(barcode)
+                        if status == "error":
+                            tqdm.write(f"    ERROR {product['name'][:40]}: {result.get('reason')}")
+                        elif barcode:
+                            existing_barcodes.add(barcode)
 
-                collected += 1
-                bar.update(1)
+                    collected += 1
+                    bar.update(1)
+            except RuntimeError as exc:
+                tqdm.write(f"  SKIP {category_es}: {exc}")
+                counters["error"] += 1
 
     # Resumen final
     print("\n" + "─" * 60)

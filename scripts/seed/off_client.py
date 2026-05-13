@@ -53,6 +53,10 @@ def fetch_by_category(off_tag: str, page_size: int = 30) -> Iterator[dict]:
             if resp.status_code == 429:
                 time.sleep(_RETRY_WAIT * (attempt + 1))
                 continue
+            if resp.status_code >= 500:
+                wait = _RETRY_WAIT * (2 ** attempt)
+                time.sleep(wait)
+                continue
             resp.raise_for_status()
             data = resp.json()
             break
