@@ -143,6 +143,10 @@ class RecipeServiceTest {
         when(userPersistencePort.findByUsername("chef")).thenReturn(Optional.of(user));
         when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(10L, 1L)).thenReturn(true);
 
+        Product prod100 = Product.builder().id(100L).name("Patata").build();
+        Product prod200 = Product.builder().id(200L).name("Huevo").build();
+        when(productPersistencePort.findAll()).thenReturn(List.of(prod100, prod200));
+
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 PantryItem.builder().productId(100L).quantity(BigDecimal.valueOf(2)).build(),
                 PantryItem.builder().productId(200L).quantity(BigDecimal.valueOf(1)).build()
@@ -171,7 +175,11 @@ class RecipeServiceTest {
         when(userPersistencePort.findByUsername("chef")).thenReturn(Optional.of(user));
         when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(10L, 1L)).thenReturn(true);
 
-        // Only product 100 is in pantry — product 200 is missing
+        Product prod100 = Product.builder().id(100L).name("Patata").build();
+        Product prod200 = Product.builder().id(200L).name("Aceite").build();
+        when(productPersistencePort.findAll()).thenReturn(List.of(prod100, prod200));
+
+        // Solo el producto 100 está en el pantry — el 200 falta
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 PantryItem.builder().productId(100L).quantity(BigDecimal.valueOf(2)).build()
         ));
@@ -185,8 +193,6 @@ class RecipeServiceTest {
                 .build();
         when(recipePersistencePort.findAll()).thenReturn(List.of(recipe));
         when(ratingPersistencePort.findByRecipeId(5L)).thenReturn(Collections.emptyList());
-        when(productPersistencePort.findById(200L)).thenReturn(
-                Optional.of(Product.builder().id(200L).name("Aceite").build()));
 
         List<RecipeSuggestionDTO> result = recipeService.getSuggestionsForHousehold(1L, "chef");
 
@@ -201,6 +207,7 @@ class RecipeServiceTest {
         User user = User.builder().id(10L).username("chef").build();
         when(userPersistencePort.findByUsername("chef")).thenReturn(Optional.of(user));
         when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(10L, 1L)).thenReturn(true);
+        when(productPersistencePort.findAll()).thenReturn(Collections.emptyList());
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(Collections.emptyList());
 
         Recipe emptyRecipe = Recipe.builder().id(7L).title("Sin ingredientes").authorId(1L)
@@ -212,6 +219,48 @@ class RecipeServiceTest {
         List<RecipeSuggestionDTO> result = recipeService.getSuggestionsForHousehold(1L, "chef");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getSuggestions_withOrphanedIngredient_doesNotInflateMatchPercentage() {
+        // Receta con 4 ingredientes: 1 y 2 en pantry, 3 faltante real, 999 huérfano
+        // (eliminado del catálogo pero presente en pantry y en la receta)
+        // Catálogo: solo productos 1, 2, 3 (no 999)
+        // Esperado: matchPercentage = 50.0 (2/4), missing.size() == 1 (solo producto 3)
+        User user = User.builder().id(10L).username("chef").build();
+        when(userPersistencePort.findByUsername("chef")).thenReturn(Optional.of(user));
+        when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(10L, 1L)).thenReturn(true);
+
+        Product prod1 = Product.builder().id(1L).name("Tomate").build();
+        Product prod2 = Product.builder().id(2L).name("Cebolla").build();
+        Product prod3 = Product.builder().id(3L).name("Ajo").build();
+        // producto 999 no está en el catálogo — es el huérfano
+        when(productPersistencePort.findAll()).thenReturn(List.of(prod1, prod2, prod3));
+
+        when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
+                PantryItem.builder().productId(1L).quantity(BigDecimal.valueOf(3)).build(),
+                PantryItem.builder().productId(2L).quantity(BigDecimal.valueOf(1)).build(),
+                PantryItem.builder().productId(999L).quantity(BigDecimal.valueOf(1)).build()
+        ));
+
+        Recipe recipe = Recipe.builder().id(5L).title("Sofrito").authorId(1L)
+                .ingredients(List.of(
+                        RecipeIngredient.builder().productId(1L).quantity(2.0).unit("ud").build(),
+                        RecipeIngredient.builder().productId(2L).quantity(1.0).unit("ud").build(),
+                        RecipeIngredient.builder().productId(3L).quantity(3.0).unit("ud").build(),
+                        RecipeIngredient.builder().productId(999L).quantity(1.0).unit("ud").build()
+                ))
+                .steps(Collections.emptyList())
+                .build();
+        when(recipePersistencePort.findAll()).thenReturn(List.of(recipe));
+        when(ratingPersistencePort.findByRecipeId(5L)).thenReturn(Collections.emptyList());
+
+        List<RecipeSuggestionDTO> result = recipeService.getSuggestionsForHousehold(1L, "chef");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getMatchPercentage()).isEqualTo(50.0);
+        assertThat(result.get(0).getMissingIngredients()).hasSize(1);
+        assertThat(result.get(0).getMissingIngredients().get(0).getProductId()).isEqualTo(3L);
     }
 
     // --- helpers ---
