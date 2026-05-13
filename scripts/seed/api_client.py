@@ -93,6 +93,63 @@ class BackendClient:
             if p.get("barcode")
         }
 
+    def load_product_index(self) -> dict[str, int]:
+        """
+        Devuelve un mapa {nombre_normalizado → productId} para todo el catálogo.
+        Usado por IngredientMatcher para el fuzzy matching.
+        """
+        resp = self._session.get(
+            f"{self._base}/api/v1/products",
+            headers=self._auth_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        index: dict[str, int] = {}
+        for p in resp.json():
+            name = (p.get("name") or "").strip()
+            pid = p.get("id")
+            if name and pid:
+                index[name] = int(pid)
+        return index
+
+    def load_existing_recipe_titles(self) -> set[str]:
+        """
+        Devuelve el conjunto de títulos de recetas ya existentes (normalizados a minúsculas).
+        Usado para idempotencia: no importar recetas duplicadas.
+        """
+        resp = self._session.get(
+            f"{self._base}/api/v1/recipes",
+            headers=self._auth_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        return {
+            (r.get("title") or "").strip().lower()
+            for r in resp.json()
+            if r.get("title")
+        }
+
+    def create_recipe(self, payload: dict) -> dict:
+        """
+        Crea una receta. Devuelve un dict con 'status':
+        - 'created'  → receta insertada correctamente
+        - 'error'    → fallo inesperado (detallado en 'reason')
+        """
+        try:
+            resp = self._session.post(
+                f"{self._base}/api/v1/recipes",
+                json=payload,
+                headers=self._auth_headers(),
+                timeout=15,
+            )
+        except requests.RequestException as exc:
+            return {"status": "error", "reason": str(exc)}
+
+        if resp.status_code in (200, 201):
+            return {"status": "created", "id": resp.json().get("id")}
+
+        return {"status": "error", "reason": f"HTTP {resp.status_code}: {resp.text[:200]}"}
+
     def create_product(
         self,
         name: str,
