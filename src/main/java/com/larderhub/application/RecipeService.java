@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -194,9 +195,15 @@ public class RecipeService implements RecipeUseCase {
 
     List<PantryItem> pantry = pantryItemPersistencePort.findByHouseholdId(householdId);
 
+    // Cargamos el catálogo una vez para: (1) descartar referencias huérfanas del
+    // pantry/receta y (2) evitar N+1 queries dentro del bucle de ingredientes.
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
+
     Set<Long> availableProductIds = pantry.stream()
         .filter(p -> p.getQuantity() != null && p.getQuantity().doubleValue() > 0)
         .map(PantryItem::getProductId)
+        .filter(productsById::containsKey)
         .collect(Collectors.toSet());
 
     List<Recipe> allRecipes = recipePersistencePort.findAll();
@@ -211,18 +218,23 @@ public class RecipeService implements RecipeUseCase {
       List<RecipeSuggestionDTO.MissingIngredientDTO> missing = new ArrayList<>();
 
       for (RecipeIngredient reqIng : recipe.getIngredients()) {
-        if (availableProductIds.contains(reqIng.getProductId())) {
+        Long productId = reqIng.getProductId();
+        Product product = productsById.get(productId);
+
+        if (product == null) {
+          // Ingrediente huérfano: cuenta en el denominador pero nunca como match.
+          continue;
+        }
+
+        if (availableProductIds.contains(productId)) {
           matchedCount++;
         } else {
-          Product p = productPersistencePort.findById(reqIng.getProductId()).orElse(null);
-          if (p != null) {
-            missing.add(RecipeSuggestionDTO.MissingIngredientDTO.builder()
-                .productId(p.getId())
-                .productName(p.getName())
-                .quantityNeeded(reqIng.getQuantity())
-                .unit(reqIng.getUnit())
-                .build());
-          }
+          missing.add(RecipeSuggestionDTO.MissingIngredientDTO.builder()
+              .productId(product.getId())
+              .productName(product.getName())
+              .quantityNeeded(reqIng.getQuantity())
+              .unit(reqIng.getUnit())
+              .build());
         }
       }
 
