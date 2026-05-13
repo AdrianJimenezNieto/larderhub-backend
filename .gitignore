@@ -105,8 +105,6 @@ diagramas/
 # ==============================================================================
 # INTERNAL DEV DOCS (useful locally, not needed in repo)
 # ==============================================================================
-SLICES_PLAN.md
-GUÍA_PROYECTO.md
-6_Desarrollo_E_Implementacion.md
-CLAUDE.md
+*.md
+!README.md
 GUÍA PROYECTO.pdf
