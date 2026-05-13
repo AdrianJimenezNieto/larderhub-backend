@@ -20,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -165,12 +166,57 @@ class InventoryServiceTest {
         ArgumentCaptor<LocalDate> dateCaptor = ArgumentCaptor.forClass(LocalDate.class);
         when(pantryItemPersistencePort.findExpiredItems(eq(1L), dateCaptor.capture()))
                 .thenReturn(List.of(expiredItem));
-        when(productPersistencePort.findById(100L)).thenReturn(Optional.of(product));
+        when(productPersistencePort.findAll()).thenReturn(List.of(product));
 
         List<PantryItemResponseDTO> result = inventoryService.getExpiredItems(1L, "ana");
 
         assertThat(result).hasSize(1);
         // The service must pass today's date — not yesterday, not a hardcoded value
         assertThat(dateCaptor.getValue()).isEqualTo(LocalDate.now());
+    }
+
+    // --- listItems: tolerancia a productos huérfanos ---
+
+    @Test
+    void listItems_skipsOrphanedPantryItems() {
+        User user = User.builder().id(5L).username("ana").build();
+        when(userPersistencePort.findByUsername("ana")).thenReturn(Optional.of(user));
+        when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(5L, 1L)).thenReturn(true);
+
+        Product valid = Product.builder().id(100L).name("Arroz").standardUnit("kg").build();
+        // Solo el producto 100 está en el catálogo; el 999 está huérfano
+        when(productPersistencePort.findAll()).thenReturn(List.of(valid));
+
+        when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
+                PantryItem.builder().id(1L).householdId(1L).productId(100L).quantity(BigDecimal.ONE).build(),
+                PantryItem.builder().id(2L).householdId(1L).productId(999L).quantity(BigDecimal.ONE).build()
+        ));
+
+        List<PantryItemResponseDTO> result = inventoryService.listItems(1L, "ana");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProductId()).isEqualTo(100L);
+    }
+
+    @Test
+    void getExpiredItems_skipsOrphanedPantryItems() {
+        User user = User.builder().id(5L).username("ana").build();
+        when(userPersistencePort.findByUsername("ana")).thenReturn(Optional.of(user));
+        when(householdMembersPersistencePort.existsByUserIdAndHouseholdId(5L, 1L)).thenReturn(true);
+
+        Product valid = Product.builder().id(100L).name("Yogur").standardUnit("ud").build();
+        when(productPersistencePort.findAll()).thenReturn(List.of(valid));
+
+        when(pantryItemPersistencePort.findExpiredItems(eq(1L), any(LocalDate.class))).thenReturn(List.of(
+                PantryItem.builder().id(1L).householdId(1L).productId(100L).quantity(BigDecimal.ONE)
+                        .expirationDate(LocalDate.now().minusDays(1)).build(),
+                PantryItem.builder().id(2L).householdId(1L).productId(999L).quantity(BigDecimal.ONE)
+                        .expirationDate(LocalDate.now().minusDays(2)).build()
+        ));
+
+        List<PantryItemResponseDTO> result = inventoryService.getExpiredItems(1L, "ana");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProductId()).isEqualTo(100L);
     }
 }
