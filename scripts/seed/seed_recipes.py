@@ -62,20 +62,19 @@ def main() -> None:
 
     client = BackendClient(args.api_url, args.seeder_password)
 
-    if not args.dry_run:
-        print("Autenticando usuario seeder...")
-        client.ensure_auth()
+    print("Autenticando usuario seeder...")
+    client.ensure_auth()
 
-        print("Cargando catálogo de productos para matching...")
-        product_index = client.load_product_index()
-        print(f"  → {len(product_index)} productos en catálogo")
+    print("Cargando catálogo de productos para matching...")
+    product_index = client.load_product_index()
+    print(f"  → {len(product_index)} productos en catálogo")
 
-        print("Cargando recetas existentes (idempotencia)...")
-        existing_titles = client.load_existing_recipe_titles()
-        print(f"  → {len(existing_titles)} recetas ya importadas\n")
-    else:
-        product_index = {}
-        existing_titles = set()
+    print("Cargando recetas existentes (idempotencia)...")
+    existing_titles = client.load_existing_recipe_titles()
+    print(f"  → {len(existing_titles)} recetas ya importadas\n")
+
+    if args.dry_run:
+        print("  [DRY-RUN] No se escribirá ningún dato en la BD\n")
 
     matcher = IngredientMatcher(product_index)
 
