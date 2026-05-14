@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,12 +102,19 @@ public class InventoryService implements InventoryUseCase {
   public List<PantryItemResponseDTO> listItems(Long householdId, String username) {
     resolveAndValidateMembership(username, householdId);
 
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
+
     return pantryItemPersistencePort.findByHouseholdId(householdId).stream()
         .map(item -> {
-          Product product = productPersistencePort.findById(item.getProductId())
-              .orElseThrow(() -> new IllegalStateException("Orphaned pantry item: product not found"));
+          Product product = productsById.get(item.getProductId());
+          if (product == null) {
+            log.warn("Orphaned pantry item id={} references missing product id={}", item.getId(), item.getProductId());
+            return null;
+          }
           return toResponseDTO(item, product);
         })
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
@@ -151,12 +160,19 @@ public class InventoryService implements InventoryUseCase {
     resolveAndValidateMembership(username, householdId);
 
     LocalDate today = LocalDate.now();
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
+
     return pantryItemPersistencePort.findExpiredItems(householdId, today).stream()
         .map(item -> {
-          Product product = productPersistencePort.findById(item.getProductId())
-              .orElseThrow(() -> new IllegalStateException("Product not found"));
+          Product product = productsById.get(item.getProductId());
+          if (product == null) {
+            log.warn("Orphaned pantry item id={} references missing product id={}", item.getId(), item.getProductId());
+            return null;
+          }
           return toResponseDTO(item, product);
         })
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
@@ -166,13 +182,19 @@ public class InventoryService implements InventoryUseCase {
 
     LocalDate today = LocalDate.now();
     LocalDate limitDate = today.plusDays(daysAhead);
+    Map<Long, Product> productsById = productPersistencePort.findAll().stream()
+        .collect(Collectors.toMap(Product::getId, p -> p));
 
     return pantryItemPersistencePort.findExpiringItems(householdId, today, limitDate).stream()
         .map(item -> {
-          Product product = productPersistencePort.findById(item.getProductId())
-              .orElseThrow(() -> new IllegalStateException("Product not found"));
+          Product product = productsById.get(item.getProductId());
+          if (product == null) {
+            log.warn("Orphaned pantry item id={} references missing product id={}", item.getId(), item.getProductId());
+            return null;
+          }
           return toResponseDTO(item, product);
         })
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 

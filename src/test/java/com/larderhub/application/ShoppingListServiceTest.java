@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -45,7 +46,7 @@ class ShoppingListServiceTest {
         setupMembership("ana", 5L, 1L);
 
         Product product = Product.builder().id(100L).name("Leche").standardUnit("l").build();
-        when(productPersistencePort.findById(100L)).thenReturn(Optional.of(product));
+        when(productPersistencePort.findAll()).thenReturn(List.of(product));
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 PantryItem.builder().productId(100L).quantity(new BigDecimal("0.5")).build()
         ));
@@ -66,6 +67,8 @@ class ShoppingListServiceTest {
     void generateFromPantry_whenItemAlreadyInCartUnchecked_skipsIt() {
         setupMembership("ana", 5L, 1L);
 
+        Product product = Product.builder().id(100L).name("Leche").standardUnit("l").build();
+        when(productPersistencePort.findAll()).thenReturn(List.of(product));
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 PantryItem.builder().productId(100L).quantity(new BigDecimal("0.5")).build()
         ));
@@ -73,9 +76,6 @@ class ShoppingListServiceTest {
         when(shoppingItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 ShoppingItem.builder().productId(100L).checked(false).build()
         ));
-        // Service fetches the product before checking if it's already in cart
-        when(productPersistencePort.findById(100L)).thenReturn(
-                Optional.of(Product.builder().id(100L).name("Leche").standardUnit("l").build()));
 
         List<ShoppingItemResponseDTO> result = shoppingListService.generateFromPantry(1L, 1.0, "ana");
 
@@ -89,7 +89,7 @@ class ShoppingListServiceTest {
         setupMembership("ana", 5L, 1L);
 
         Product product = Product.builder().id(100L).name("Arroz").standardUnit("kg").build();
-        when(productPersistencePort.findById(100L)).thenReturn(Optional.of(product));
+        when(productPersistencePort.findAll()).thenReturn(List.of(product));
         when(pantryItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
                 PantryItem.builder().productId(100L).quantity(new BigDecimal("1.0")).build()
         ));
@@ -158,6 +158,47 @@ class ShoppingListServiceTest {
         // 2.0 (existing) + 3.0 (cart) = 5.0
         assertThat(pantryCaptor.getValue().getQuantity())
                 .isEqualByComparingTo(new BigDecimal("5.0"));
+    }
+
+    // --- listItems: tolerancia a productos huérfanos ---
+
+    @Test
+    void listItems_skipsOrphanedShoppingItems() {
+        setupMembership("ana", 5L, 1L);
+
+        Product valid = Product.builder().id(100L).name("Leche").standardUnit("l").build();
+        when(productPersistencePort.findAll()).thenReturn(List.of(valid));
+
+        when(shoppingItemPersistencePort.findByHouseholdId(1L)).thenReturn(List.of(
+                ShoppingItem.builder().id(1L).householdId(1L).productId(100L).quantity(1.0).checked(false).build(),
+                ShoppingItem.builder().id(2L).householdId(1L).productId(999L).quantity(1.0).checked(false).build()
+        ));
+
+        List<ShoppingItemResponseDTO> result = shoppingListService.listItems(1L, "ana");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getProductId()).isEqualTo(100L);
+    }
+
+    // --- checkItem: producto huérfano ---
+
+    @Test
+    void checkItem_whenProductIsOrphan_throwsIllegalArgumentException() {
+        setupMembership("ana", 5L, 1L);
+
+        when(shoppingItemPersistencePort.existsByIdAndHouseholdId(7L, 1L)).thenReturn(true);
+        ShoppingItem cartItem = ShoppingItem.builder()
+                .id(7L).householdId(1L).productId(999L).quantity(2.0).checked(false).build();
+        when(shoppingItemPersistencePort.findById(7L)).thenReturn(Optional.of(cartItem));
+        when(pantryItemPersistencePort.findByHouseholdIdAndProductId(1L, 999L))
+                .thenReturn(Optional.empty());
+        when(shoppingItemPersistencePort.save(any(ShoppingItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(pantryItemPersistencePort.save(any(PantryItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productPersistencePort.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> shoppingListService.checkItem(1L, 7L, "ana"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya no existe en el catálogo");
     }
 
     // --- helper ---
